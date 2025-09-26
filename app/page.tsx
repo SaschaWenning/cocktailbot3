@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { pumpConfig as initialPumpConfig } from "@/data/pump-config"
-import { makeCocktail, getPumpConfig, saveRecipe, getAllCocktails } from "@/lib/cocktail-machine"
+import { makeCocktail, getPumpConfig, saveRecipe, getAllCocktails, deleteRecipe } from "@/lib/cocktail-machine"
 import { AlertCircle, Edit, ChevronLeft, ChevronRight, Trash2, Plus } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import type { Cocktail } from "@/types/cocktail"
@@ -384,42 +384,23 @@ export default function Home() {
     if (!cocktailToDelete) return
 
     try {
-      console.log("[v0] Deleting/hiding cocktail:", cocktailToDelete.id)
+      console.log("[v0] Deleting cocktail permanently:", cocktailToDelete.id)
 
-      // Get current hidden cocktails from API
-      const response = await fetch("/api/hidden-cocktails")
-      const data = await response.json()
-      const hiddenCocktails: string[] = data.hiddenCocktails || []
-      console.log("[v0] Current hidden cocktails before adding:", hiddenCocktails)
+      await deleteRecipe(cocktailToDelete.id)
+      console.log("[v0] Cocktail deleted permanently from database")
 
-      // Add cocktail ID to hidden list if not already there
-      if (!hiddenCocktails.includes(cocktailToDelete.id)) {
-        hiddenCocktails.push(cocktailToDelete.id)
-
-        // Save updated list to API
-        await fetch("/api/hidden-cocktails", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ hiddenCocktails }),
-        })
-        console.log("[v0] Updated hidden cocktails via API:", hiddenCocktails)
-      } else {
-        console.log("[v0] Cocktail already in hidden list")
-      }
-
+      // Remove cocktail from local state
       setCocktailsData((prev) => prev.filter((c) => c.id !== cocktailToDelete.id))
       console.log("[v0] Removed cocktail from local state")
 
-      // If the hidden cocktail was selected, reset selection
+      // If the deleted cocktail was selected, reset selection
       if (selectedCocktail?.id === cocktailToDelete.id) {
         setSelectedCocktail(null)
       }
 
       setCocktailToDelete(null)
     } catch (error) {
-      console.error("Fehler beim Ausblenden des Cocktails:", error)
+      console.error("Fehler beim Löschen des Cocktails:", error)
       throw error
     }
   }
