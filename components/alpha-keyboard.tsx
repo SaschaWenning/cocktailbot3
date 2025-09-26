@@ -8,9 +8,10 @@ interface AlphaKeyboardProps {
   onBackspace: () => void
   onClear: () => void
   onConfirm: () => void
+  onCancel?: () => void // Füge optionale onCancel Funktion hinzu
 }
 
-export default function AlphaKeyboard({ onKeyPress, onBackspace, onClear, onConfirm }: AlphaKeyboardProps) {
+export default function AlphaKeyboard({ onKeyPress, onBackspace, onClear, onConfirm, onCancel }: AlphaKeyboardProps) {
   // Erste Reihe: q bis p (10 Tasten)
   const row1 = ["q", "w", "e", "r", "t", "z", "u", "i", "o", "p"]
   // Zweite Reihe: a bis l (9 Tasten)
@@ -19,7 +20,7 @@ export default function AlphaKeyboard({ onKeyPress, onBackspace, onClear, onConf
   const row3 = ["y", "x", "c", "v", "b", "n", "m"]
 
   return (
-    <div className="bg-black border border-[hsl(var(--cocktail-card-border))] rounded-lg p-1.5 shadow-lg max-w-sm mx-auto scale-75 origin-center">
+    <div className="bg-black border border-[hsl(var(--cocktail-card-border))] rounded-lg p-1.5 shadow-lg max-w-sm mx-auto">
       {/* Erste Reihe - 10 Tasten */}
       <div className="grid grid-cols-10 gap-0.5 mb-0.5">
         {row1.map((key) => (
@@ -89,8 +90,17 @@ export default function AlphaKeyboard({ onKeyPress, onBackspace, onClear, onConf
           Zurück
         </Button>
 
+        {onCancel && (
+          <Button
+            className="h-6 text-xs font-medium bg-[hsl(var(--cocktail-card-bg))] text-white border-[hsl(var(--cocktail-card-border))] hover:bg-[hsl(var(--cocktail-card-border))] active:bg-[hsl(var(--cocktail-error))] active:text-white transition-colors"
+            onClick={onCancel}
+          >
+            Abbrechen
+          </Button>
+        )}
+
         <Button
-          className="col-span-2 h-6 text-xs font-medium bg-[hsl(var(--cocktail-primary))] text-black hover:bg-[hsl(var(--cocktail-primary-hover))] active:bg-[hsl(var(--cocktail-primary-hover))] transition-colors"
+          className={`${onCancel ? "col-span-1" : "col-span-2"} h-6 text-xs font-medium bg-[hsl(var(--cocktail-primary))] text-black hover:bg-[hsl(var(--cocktail-primary-hover))] active:bg-[hsl(var(--cocktail-primary-hover))] transition-colors`}
           onClick={onConfirm}
         >
           <Check className="h-3 w-3 mr-1" />

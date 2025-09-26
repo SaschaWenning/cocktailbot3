@@ -3,9 +3,8 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Lock } from "lucide-react"
 import AlphaKeyboard from "./alpha-keyboard"
@@ -100,25 +99,10 @@ export default function PasswordModal({ isOpen, onClose, onSuccess }: PasswordMo
                 onBackspace={handleBackspace}
                 onClear={handleClear}
                 onConfirm={handleSubmit}
+                onCancel={onClose}
               />
             </div>
           )}
-
-          <DialogFooter>
-            <Button
-              type="button"
-              className="bg-[hsl(var(--cocktail-card-bg))] text-white border-[hsl(var(--cocktail-card-border))] hover:bg-[hsl(var(--cocktail-card-border))]"
-              onClick={onClose}
-            >
-              Abbrechen
-            </Button>
-            <Button
-              type="submit"
-              className="bg-[hsl(var(--cocktail-primary))] text-black hover:bg-[hsl(var(--cocktail-primary-hover))]"
-            >
-              Bestätigen
-            </Button>
-          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
