@@ -399,9 +399,21 @@ export default function Home() {
       }
 
       setCocktailToDelete(null)
+      setShowDeleteConfirmation(false)
+
+      // Show success message
+      toast({
+        title: "Cocktail gelöscht",
+        description: `${cocktailToDelete.name} wurde erfolgreich gelöscht.`,
+      })
     } catch (error) {
       console.error("Fehler beim Löschen des Cocktails:", error)
-      throw error
+
+      toast({
+        title: "Fehler beim Löschen",
+        description: "Der Cocktail konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
+        variant: "destructive",
+      })
     }
   }
 
