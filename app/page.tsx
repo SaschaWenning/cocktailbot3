@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { pumpConfig as initialPumpConfig } from "@/data/pump-config"
-import { makeCocktail, getPumpConfig, saveRecipe } from "@/lib/cocktail-machine"
+import { makeCocktail, getPumpConfig, saveRecipe, getAllCocktails } from "@/lib/cocktail-machine"
 import { AlertCircle, Edit, ChevronLeft, ChevronRight, Trash2, Plus } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import type { Cocktail } from "@/types/cocktail"
@@ -138,12 +138,8 @@ export default function Home() {
   const loadCocktails = async () => {
     try {
       console.log("[v0] Loading cocktails...")
-      const response = await fetch("/api/cocktails")
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-      }
-      const cocktails = await response.json()
-      console.log("[v0] Loaded cocktails from API:", cocktails?.length || 0)
+      const cocktails = await getAllCocktails()
+      console.log("[v0] Loaded cocktails from getAllCocktails:", cocktails?.length || 0)
 
       // Load hidden cocktails from API instead of localStorage
       try {
