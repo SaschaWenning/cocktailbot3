@@ -87,8 +87,10 @@ export async function getAllCocktails(): Promise<Cocktail[]> {
     throw new Error(`Failed to get cocktails: ${response.statusText}`)
   }
 
-  const cocktails = await response.json()
-  return Array.isArray(cocktails) ? cocktails : []
+  const data = await response.json()
+  const cocktails = Array.isArray(data) ? data : (data?.cocktails ?? [])
+  console.log("[v0] Loaded cocktails from getAllCocktails:", cocktails.length)
+  return cocktails
 }
 
 export async function saveRecipe(cocktail: Cocktail) {
