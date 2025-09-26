@@ -66,35 +66,37 @@ export default function PasswordModal({ isOpen, onClose, onSuccess }: PasswordMo
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-black border-[hsl(var(--cocktail-card-border))] text-[hsl(var(--cocktail-text))] sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Lock className="h-5 w-5" />
+      <DialogContent className="bg-black border-[hsl(var(--cocktail-card-border))] text-[hsl(var(--cocktail-text))] sm:max-w-md max-h-[580px] overflow-y-auto">
+        <DialogHeader className="pb-2">
+          <DialogTitle className="flex items-center gap-2 text-sm">
+            <Lock className="h-4 w-4" />
             Passwort erforderlich
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="password">Bitte gib das Passwort ein, um Rezepte zu bearbeiten:</Label>
+        <form onSubmit={handleSubmit} className="space-y-2">
+          <div className="space-y-1">
+            <Label htmlFor="password" className="text-xs">
+              Bitte gib das Passwort ein, um Rezepte zu bearbeiten:
+            </Label>
             <Input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className={`bg-[hsl(var(--cocktail-bg))] border-[hsl(var(--cocktail-card-border))] ${error ? "border-[hsl(var(--cocktail-error))]" : ""}`}
+              className={`bg-[hsl(var(--cocktail-bg))] border-[hsl(var(--cocktail-card-border))] h-8 text-sm ${error ? "border-[hsl(var(--cocktail-error))]" : ""}`}
               placeholder="Passwort eingeben"
               autoComplete="off"
               readOnly
               onFocus={() => setShowKeyboard(true)}
             />
             {error && (
-              <p className="text-[hsl(var(--cocktail-error))] text-sm">Falsches Passwort. Bitte versuche es erneut.</p>
+              <p className="text-[hsl(var(--cocktail-error))] text-xs">Falsches Passwort. Bitte versuche es erneut.</p>
             )}
           </div>
 
           {showKeyboard && (
-            <div className="mt-4">
+            <div className="mt-2">
               <AlphaKeyboard
                 onKeyPress={handleKeyPress}
                 onBackspace={handleBackspace}
@@ -104,17 +106,17 @@ export default function PasswordModal({ isOpen, onClose, onSuccess }: PasswordMo
             </div>
           )}
 
-          <DialogFooter>
+          <DialogFooter className="pt-2">
             <Button
               type="button"
-              className="bg-[hsl(var(--cocktail-card-bg))] text-white border-[hsl(var(--cocktail-card-border))] hover:bg-[hsl(var(--cocktail-card-border))]"
+              className="bg-[hsl(var(--cocktail-card-bg))] text-white border-[hsl(var(--cocktail-card-border))] hover:bg-[hsl(var(--cocktail-card-border))] h-8 text-xs px-3"
               onClick={onClose}
             >
               Abbrechen
             </Button>
             <Button
               type="submit"
-              className="bg-[hsl(var(--cocktail-primary))] text-black hover:bg-[hsl(var(--cocktail-primary-hover))]"
+              className="bg-[hsl(var(--cocktail-primary))] text-black hover:bg-[hsl(var(--cocktail-primary-hover))] h-8 text-xs px-3"
             >
               Bestätigen
             </Button>
