@@ -19,13 +19,13 @@ export default function AlphaKeyboard({ onKeyPress, onBackspace, onClear, onConf
   const row3 = ["y", "x", "c", "v", "b", "n", "m"]
 
   return (
-    <div className="bg-black border border-[hsl(var(--cocktail-card-border))] rounded-lg p-1 shadow-lg w-full max-w-2xl mx-auto min-h-0 overflow-hidden">
+    <div className="bg-black border border-[hsl(var(--cocktail-card-border))] rounded-lg p-1.5 shadow-lg max-w-sm mx-auto scale-75 origin-center">
       {/* Erste Reihe - 10 Tasten */}
       <div className="grid grid-cols-10 gap-0.5 mb-0.5">
         {row1.map((key) => (
           <Button
             key={key}
-            className="h-6 text-xs font-medium bg-[hsl(var(--cocktail-card-bg))] text-white border-[hsl(var(--cocktail-card-border))] hover:bg-[hsl(var(--cocktail-card-border))] hover:text-[hsl(var(--cocktail-primary))] active:bg-[hsl(var(--cocktail-primary))] active:text-black transition-colors min-w-0 p-0"
+            className="h-6 text-xs font-medium bg-[hsl(var(--cocktail-card-bg))] text-white border-[hsl(var(--cocktail-card-border))] hover:bg-[hsl(var(--cocktail-card-border))] hover:text-[hsl(var(--cocktail-primary))] active:bg-[hsl(var(--cocktail-primary))] active:text-black transition-colors"
             onClick={() => onKeyPress(key)}
           >
             {key.toUpperCase()}
@@ -38,7 +38,7 @@ export default function AlphaKeyboard({ onKeyPress, onBackspace, onClear, onConf
         {row2.map((key) => (
           <Button
             key={key}
-            className="h-6 text-xs font-medium bg-[hsl(var(--cocktail-card-bg))] text-white border-[hsl(var(--cocktail-card-border))] hover:bg-[hsl(var(--cocktail-card-border))] hover:text-[hsl(var(--cocktail-primary))] active:bg-[hsl(var(--cocktail-primary))] active:text-black transition-colors min-w-0 p-0"
+            className="h-6 text-xs font-medium bg-[hsl(var(--cocktail-card-bg))] text-white border-[hsl(var(--cocktail-card-border))] hover:bg-[hsl(var(--cocktail-card-border))] hover:text-[hsl(var(--cocktail-primary))] active:bg-[hsl(var(--cocktail-primary))] active:text-black transition-colors"
             onClick={() => onKeyPress(key)}
           >
             {key.toUpperCase()}
@@ -52,7 +52,7 @@ export default function AlphaKeyboard({ onKeyPress, onBackspace, onClear, onConf
         {row3.map((key) => (
           <Button
             key={key}
-            className="h-6 text-xs font-medium bg-[hsl(var(--cocktail-card-bg))] text-white border-[hsl(var(--cocktail-card-border))] hover:bg-[hsl(var(--cocktail-card-border))] hover:text-[hsl(var(--cocktail-primary))] active:bg-[hsl(var(--cocktail-primary))] active:text-black transition-colors min-w-0 p-0"
+            className="h-6 text-xs font-medium bg-[hsl(var(--cocktail-card-bg))] text-white border-[hsl(var(--cocktail-card-border))] hover:bg-[hsl(var(--cocktail-card-border))] hover:text-[hsl(var(--cocktail-primary))] active:bg-[hsl(var(--cocktail-primary))] active:text-black transition-colors"
             onClick={() => onKeyPress(key)}
           >
             {key.toUpperCase()}
@@ -64,7 +64,7 @@ export default function AlphaKeyboard({ onKeyPress, onBackspace, onClear, onConf
       <div className="grid grid-cols-10 gap-0.5 mb-1">
         <div className="col-span-2"></div>
         <Button
-          className="col-span-6 h-6 text-xs font-medium bg-[hsl(var(--cocktail-card-bg))] text-white border-[hsl(var(--cocktail-card-border))] hover:bg-[hsl(var(--cocktail-card-border))] active:bg-[hsl(var(--cocktail-primary))] active:text-black transition-colors min-w-0 p-0"
+          className="col-span-6 h-6 text-xs font-medium bg-[hsl(var(--cocktail-card-bg))] text-white border-[hsl(var(--cocktail-card-border))] hover:bg-[hsl(var(--cocktail-card-border))] active:bg-[hsl(var(--cocktail-primary))] active:text-black transition-colors"
           onClick={() => onKeyPress(" ")}
         >
           LEERZEICHEN
@@ -74,25 +74,26 @@ export default function AlphaKeyboard({ onKeyPress, onBackspace, onClear, onConf
 
       <div className="grid grid-cols-4 gap-1">
         <Button
-          className="h-6 text-xs font-medium text-[hsl(var(--cocktail-error))] bg-[hsl(var(--cocktail-card-bg))] border-[hsl(var(--cocktail-card-border))] hover:bg-[hsl(var(--cocktail-error))]/20 active:bg-[hsl(var(--cocktail-error))]/30 transition-colors min-w-0 p-0"
+          className="h-6 text-xs font-medium text-[hsl(var(--cocktail-error))] bg-[hsl(var(--cocktail-card-bg))] border-[hsl(var(--cocktail-card-border))] hover:bg-[hsl(var(--cocktail-error))]/20 active:bg-[hsl(var(--cocktail-error))]/30 transition-colors"
           onClick={onClear}
         >
-          <X className="h-3 w-3 mr-0.5" />
-          Del
+          <X className="h-2 w-2 mr-1" />
+          Löschen
         </Button>
 
         <Button
-          className="h-6 text-xs font-medium bg-[hsl(var(--cocktail-card-bg))] text-white border-[hsl(var(--cocktail-card-border))] hover:bg-[hsl(var(--cocktail-card-border))] active:bg-[hsl(var(--cocktail-primary))] active:text-black transition-colors min-w-0 p-0"
+          className="h-6 text-xs font-medium bg-[hsl(var(--cocktail-card-bg))] text-white border-[hsl(var(--cocktail-card-border))] hover:bg-[hsl(var(--cocktail-card-border))] active:bg-[hsl(var(--cocktail-primary))] active:text-black transition-colors"
           onClick={onBackspace}
         >
-          <Backspace className="h-3 w-3 mr-0.5" />←
+          <Backspace className="h-2 w-2 mr-1" />
+          Zurück
         </Button>
 
         <Button
-          className="col-span-2 h-6 text-xs font-medium bg-[hsl(var(--cocktail-primary))] text-black hover:bg-[hsl(var(--cocktail-primary-hover))] active:bg-[hsl(var(--cocktail-primary-hover))] transition-colors min-w-0 p-0"
+          className="col-span-2 h-6 text-xs font-medium bg-[hsl(var(--cocktail-primary))] text-black hover:bg-[hsl(var(--cocktail-primary-hover))] active:bg-[hsl(var(--cocktail-primary-hover))] transition-colors"
           onClick={onConfirm}
         >
-          <Check className="h-3 w-3 mr-0.5" />
+          <Check className="h-3 w-3 mr-1" />
           Bestätigen
         </Button>
       </div>
