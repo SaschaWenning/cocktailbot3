@@ -10,9 +10,7 @@ import type { PumpConfig } from "@/types/pump"
 import { makeSingleShot } from "@/lib/cocktail-machine"
 import type { IngredientLevel } from "@/types/ingredient-level"
 import { getAllIngredients } from "@/lib/ingredients"
-import PasswordModal from "./password-modal"
 import VirtualKeyboard from "./virtual-keyboard"
-import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 
 interface ShotSelectorProps {
@@ -30,8 +28,6 @@ export default function ShotSelector({ pumpConfig, ingredientLevels, onShotCompl
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [shotSize, setShotSize] = useState<number>(40) // Standard: 40ml
   const [allIngredients, setAllIngredients] = useState<any[]>([])
-  const [isEditingAmounts, setIsEditingAmounts] = useState(false)
-  const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [customShotSizes, setCustomShotSizes] = useState<{ [key: string]: number[] }>({})
 
   const [showKeyboard, setShowKeyboard] = useState(false)
@@ -78,7 +74,6 @@ export default function ShotSelector({ pumpConfig, ingredientLevels, onShotCompl
 
   const handleCancelSelection = () => {
     setSelectedIngredient(null)
-    setIsEditingAmounts(false)
   }
 
   const checkIngredientAvailable = (ingredientId: string) => {
@@ -139,35 +134,10 @@ export default function ShotSelector({ pumpConfig, ingredientLevels, onShotCompl
     }
   }
 
-  const handlePasswordSuccess = () => {
-    setShowPasswordModal(false)
-    setIsEditingAmounts(true)
-  }
-
-  const handlePasswordCancel = () => {
-    setShowPasswordModal(false)
-  }
-
   const getAvailableSizes = (ingredientId: string) => {
     const customSizes = customShotSizes[ingredientId] || []
     const defaultSizes = [20, 40]
     return [...new Set([...defaultSizes, ...customSizes])].sort((a, b) => a - b)
-  }
-
-  const addCustomSize = (ingredientId: string, size: number) => {
-    if (size > 0) {
-      setCustomShotSizes((prev) => ({
-        ...prev,
-        [ingredientId]: [...(prev[ingredientId] || []), size],
-      }))
-    }
-  }
-
-  const removeCustomSize = (ingredientId: string, size: number) => {
-    setCustomShotSizes((prev) => ({
-      ...prev,
-      [ingredientId]: (prev[ingredientId] || []).filter((s) => s !== size),
-    }))
   }
 
   const handleKeyboardInput = (value: string) => {
@@ -178,7 +148,6 @@ export default function ShotSelector({ pumpConfig, ingredientLevels, onShotCompl
     if (activeInput === "custom-size" && selectedIngredient) {
       const value = Number.parseInt(inputValue)
       if (value > 0) {
-        addCustomSize(selectedIngredient, value)
       }
     }
     setShowKeyboardModal(false)
@@ -243,60 +212,22 @@ export default function ShotSelector({ pumpConfig, ingredientLevels, onShotCompl
               <div className="w-full max-w-xs">
                 <h4 className="text-base mb-2 text-center text-[hsl(var(--cocktail-text))]">Shot-Größe wählen:</h4>
                 <div className="flex flex-wrap gap-2 justify-center">
-                  {availableSizes.map((size) => (
-                    <div key={size} className="flex items-center gap-1">
-                      <button
-                        type="button"
-                        onClick={() => setShotSize(size)}
-                        className={`text-sm py-1 px-2 rounded bg-[hsl(var(--cocktail-card-bg))] ${
-                          shotSize === size
-                            ? "font-semibold border-b-2 border-[hsl(var(--cocktail-primary))] text-[hsl(var(--cocktail-primary))]"
-                            : "text-[hsl(var(--cocktail-text))] hover:text-[hsl(var(--cocktail-primary))]"
-                        }`}
-                      >
-                        {size}ml
-                      </button>
-                      {isEditingAmounts && (
-                        <button
-                          type="button"
-                          onClick={() => removeCustomSize(selectedIngredient, size)}
-                          className="text-xs text-[hsl(var(--cocktail-error))] hover:text-[hsl(var(--cocktail-error))]/80"
-                        >
-                          ×
-                        </button>
-                      )}
-                    </div>
-                  ))}
+                  <button
+                    key={availableSizes}
+                    type="button"
+                    onClick={() => setShotSize(availableSizes)}
+                    className={`text-sm py-1 px-2 rounded bg-[hsl(var(--cocktail-card-bg))] ${
+                      shotSize === availableSizes
+                        ? "font-semibold border-b-2 border-[hsl(var(--cocktail-primary))] text-[hsl(var(--cocktail-primary))]"
+                        : "text-[hsl(var(--cocktail-text))] hover:text-[hsl(var(--cocktail-primary))]"
+                    }`}
+                  >
+                    {availableSizes}ml
+                  </button>
                 </div>
-
-                {isEditingAmounts && (
-                  <div className="mt-3 flex gap-2 justify-center items-center">
-                    <Input
-                      value={activeInput === "custom-size" ? inputValue : ""}
-                      onClick={() => openKeyboard("custom-size")}
-                      readOnly
-                      placeholder="ml eingeben"
-                      className="w-32 h-10 px-3 py-2 text-base bg-[hsl(var(--cocktail-card-bg))] text-[hsl(var(--cocktail-text))] border border-[hsl(var(--cocktail-card-border))] rounded cursor-pointer text-center"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setIsEditingAmounts(false)}
-                      className="w-32 h-10 px-3 py-2 text-base bg-[hsl(var(--cocktail-primary))] text-black rounded font-medium"
-                    >
-                      Fertig
-                    </button>
-                  </div>
-                )}
               </div>
 
               <div className="flex gap-2 w-full mt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowPasswordModal(true)}
-                  className="flex-1 bg-[hsl(var(--cocktail-card-bg))] text-[hsl(var(--cocktail-text))] border-[hsl(var(--cocktail-card-border))]"
-                >
-                  Bearbeiten
-                </Button>
                 <Button
                   className="flex-1 bg-transparent"
                   variant="outline"
@@ -316,8 +247,6 @@ export default function ShotSelector({ pumpConfig, ingredientLevels, onShotCompl
             </div>
           </CardContent>
         </Card>
-
-        <PasswordModal isOpen={showPasswordModal} onClose={handlePasswordCancel} onSuccess={handlePasswordSuccess} />
 
         <Dialog open={showKeyboardModal} onOpenChange={setShowKeyboardModal}>
           <DialogContent className="w-[95vw] h-[95vh] max-w-none max-h-none m-0 rounded-none bg-[hsl(var(--cocktail-bg))] border-[hsl(var(--cocktail-card-border))]">
