@@ -166,15 +166,8 @@ export default function Home() {
       }
     } catch (error) {
       console.error("Fehler beim Laden der Daten:", error)
-      console.log("[v0] Using fallback cocktails from static data")
-      try {
-        const { cocktails } = await import("@/data/cocktails")
-        setCocktailsData(cocktails)
-        console.log("[v0] Loaded", cocktails.length, "cocktails from static data")
-      } catch (importError) {
-        console.error("[v0] Error loading fallback cocktails:", importError)
-        setCocktailsData([])
-      }
+      console.log("[v0] Using empty fallback - no server imports in browser")
+      setCocktailsData([])
     }
   }
 
@@ -243,15 +236,8 @@ export default function Home() {
       setAllIngredientsData(ingredients)
     } catch (error) {
       console.error("Fehler beim Laden der Zutaten:", error)
-      console.log("[v0] Using fallback ingredients data")
-      try {
-        const { ingredients } = await import("@/data/ingredients")
-        setAllIngredientsData(ingredients)
-        console.log("[v0] Loaded", ingredients.length, "ingredients from static data")
-      } catch (importError) {
-        console.error("[v0] Error loading fallback ingredients:", importError)
-        setAllIngredientsData([])
-      }
+      console.log("[v0] Using empty fallback ingredients - no server imports in browser")
+      setAllIngredientsData([])
     }
   }
 
