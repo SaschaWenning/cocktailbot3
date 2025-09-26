@@ -163,7 +163,9 @@ export async function getAllCocktails(): Promise<Cocktail[]> {
           cocktailMap.set(cocktail.id, updatedCocktail)
         }
       } else {
-        console.log("[v0] No custom cocktails file found, using defaults only")
+        console.log("[v0] No custom cocktails file found, creating empty file")
+        fs.writeFileSync(COCKTAILS_PATH, JSON.stringify([], null, 2), "utf8")
+        console.log("[v0] Created empty custom cocktails file at:", COCKTAILS_PATH)
       }
     } catch (customError) {
       console.error("[v0] Error loading custom cocktails (continuing with defaults):", customError)
