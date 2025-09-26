@@ -2,23 +2,46 @@
 
 import type { Cocktail } from "@/types/cocktail"
 import type { PumpConfig } from "@/types/pump"
-import fs from "fs"
-import path from "path"
-import { exec } from "child_process"
-import { promisify } from "util"
-import { loadDynamicCocktails, saveOrUpdateCocktail, initializeCocktailsJSON } from "@/lib/cocktail-initialization"
 
-const execPromise = promisify(exec)
+let fs: typeof import("fs")
+let path: typeof import("path")
+let execPromise: any
+
+// Lazy loading für Node.js Module nur auf dem Server
+async function getNodeModules() {
+  if (typeof window !== "undefined") {
+    throw new Error("Node.js modules not available in browser")
+  }
+
+  if (!fs) {
+    fs = await import("fs")
+    path = await import("path")
+    const { exec } = await import("child_process")
+    const { promisify } = await import("util")
+    execPromise = promisify(exec)
+  }
+
+  return { fs, path, execPromise }
+}
 
 // Pfad zur JSON-Datei für die Pumpenkonfiguration
-const PUMP_CONFIG_PATH = path.join(process.cwd(), "data", "pump-config.json")
+const getPumpConfigPath = () => {
+  if (typeof window !== "undefined") return ""
+  return require("path").join(process.cwd(), "data", "pump-config.json")
+}
 
 // Pfad zur JSON-Datei für die Cocktail-Rezepte
-const COCKTAILS_PATH = path.join(process.cwd(), "data", "custom-cocktails.json")
+const getCocktailsPath = () => {
+  if (typeof window !== "undefined") return ""
+  return require("path").join(process.cwd(), "data", "custom-cocktails.json")
+}
 
 // Funktion zum Laden der Pumpenkonfiguration
 export async function getPumpConfig(): Promise<PumpConfig[]> {
   try {
+    const { fs, path } = await getNodeModules()
+    const PUMP_CONFIG_PATH = getPumpConfigPath()
+
     // Prüfe, ob die Datei existiert
     if (fs.existsSync(PUMP_CONFIG_PATH)) {
       // Lese die Datei
@@ -46,6 +69,9 @@ export async function getPumpConfig(): Promise<PumpConfig[]> {
 // Funktion zum Speichern der Pumpen-Konfiguration
 export async function savePumpConfig(pumpConfig: PumpConfig[]) {
   try {
+    const { fs, path } = await getNodeModules()
+    const PUMP_CONFIG_PATH = getPumpConfigPath()
+
     console.log("Speichere Pumpen-Konfiguration:", pumpConfig)
 
     // Stelle sicher, dass das Verzeichnis existiert
@@ -67,21 +93,93 @@ export async function getAllCocktails(): Promise<Cocktail[]> {
   try {
     console.log("[v0] Loading cocktails from getAllCocktails...")
 
-    // Initialize the dynamic cocktails system if needed
-    await initializeCocktailsJSON()
+    // Lade die Standard-Cocktails
+    const { cocktails: defaultCocktails } = await import("@/data/cocktails")
+    console.log("[v0] Loaded default cocktails:", defaultCocktails.length)
 
-    // Load cocktails from the dynamic JSON file
-    const cocktails = await loadDynamicCocktails()
+    // Keine zusätzlichen Cocktails definieren
+    const additionalCocktails: Cocktail[] = []
 
-    console.log("[v0] Total cocktails loaded from dynamic JSON:", cocktails.length)
-    return cocktails
+    // Erstelle eine Map für die Cocktails, um Duplikate zu vermeiden
+    const cocktailMap = new Map<string, Cocktail>()
+
+    // Füge zuerst die Standard-Cocktails hinzu und ersetze "rum" durch "brauner rum"
+    for (const cocktail of defaultCocktails) {
+      // Überspringe den ursprünglichen Malibu Ananas, da wir eine aktualisierte Version haben
+      // Überspringe auch Gin Tonic und Cuba Libre
+      if (cocktail.id === "malibu-ananas" || cocktail.id === "gin-tonic" || cocktail.id === "cuba-libre") continue
+
+      // Erstelle eine Kopie des Cocktails
+      const updatedCocktail = { ...cocktail }
+
+      // Aktualisiere die Zutaten-Textliste
+      updatedCocktail.ingredients = cocktail.ingredients.map((ingredient) =>
+        ingredient.includes("Rum") && !ingredient.includes("Brauner Rum")
+          ? ingredient.replace("Rum", "Brauner Rum")
+          : ingredient,
+      )
+
+      // Füge den aktualisierten Cocktail zur Map hinzu
+      cocktailMap.set(cocktail.id, updatedCocktail)
+    }
+
+    // Füge die zusätzlichen Cocktails hinzu (in diesem Fall leer)
+    for (const cocktail of additionalCocktails) {
+      cocktailMap.set(cocktail.id, cocktail)
+    }
+
+    try {
+      const { fs, path } = await getNodeModules()
+      const COCKTAILS_PATH = getCocktailsPath()
+
+      // Stelle sicher, dass das data Verzeichnis existiert
+      const dataDir = path.dirname(COCKTAILS_PATH)
+      if (!fs.existsSync(dataDir)) {
+        console.log("[v0] Creating data directory:", dataDir)
+        fs.mkdirSync(dataDir, { recursive: true })
+      }
+
+      // Prüfe, ob die Datei für benutzerdefinierte Cocktails existiert
+      if (fs.existsSync(COCKTAILS_PATH)) {
+        console.log("[v0] Loading custom cocktails from:", COCKTAILS_PATH)
+        // Lese die Datei
+        const data = fs.readFileSync(COCKTAILS_PATH, "utf8")
+        const customCocktails: Cocktail[] = JSON.parse(data)
+        console.log("[v0] Loaded custom cocktails:", customCocktails.length)
+
+        // Aktualisiere und füge benutzerdefinierte Cocktails hinzu
+        for (const cocktail of customCocktails) {
+          // Erstelle eine Kopie des Cocktails
+          const updatedCocktail = { ...cocktail }
+
+          // Aktualisiere die Zutaten-Textliste
+          updatedCocktail.ingredients = cocktail.ingredients.map((ingredient) =>
+            ingredient.includes("Rum") && !ingredient.includes("Brauner Rum")
+              ? ingredient.replace("Rum", "Brauner Rum")
+              : ingredient,
+          )
+
+          // Füge den aktualisierten Cocktail zur Map hinzu
+          cocktailMap.set(cocktail.id, updatedCocktail)
+        }
+      } else {
+        console.log("[v0] No custom cocktails file found, using defaults only")
+      }
+    } catch (customError) {
+      console.error("[v0] Error loading custom cocktails (continuing with defaults):", customError)
+    }
+
+    // Konvertiere die Map zurück in ein Array
+    const result = Array.from(cocktailMap.values())
+    console.log("[v0] Total cocktails loaded:", result.length)
+    return result
   } catch (error) {
     console.error("[v0] Error in getAllCocktails:", error)
 
-    // Fallback: Load the static cocktails
+    // Fallback: Lade nur die Standard-Cocktails
     try {
       const { cocktails } = await import("@/data/cocktails")
-      console.log("[v0] Fallback: returning static cocktails only:", cocktails.length)
+      console.log("[v0] Fallback: returning default cocktails only:", cocktails.length)
       return cocktails
     } catch (fallbackError) {
       console.error("[v0] Even fallback failed:", fallbackError)
@@ -93,15 +191,39 @@ export async function getAllCocktails(): Promise<Cocktail[]> {
 // Funktion zum Speichern eines Cocktail-Rezepts
 export async function saveRecipe(cocktail: Cocktail) {
   try {
-    console.log("Saving recipe to dynamic JSON:", cocktail.name)
+    const { fs, path } = await getNodeModules()
+    const COCKTAILS_PATH = getCocktailsPath()
 
-    // Use the new dynamic cocktail system
-    await saveOrUpdateCocktail(cocktail)
+    console.log("Speichere Rezept:", cocktail)
 
-    console.log("Recipe successfully saved to dynamic JSON")
+    // Stelle sicher, dass das Verzeichnis existiert
+    fs.mkdirSync(path.dirname(COCKTAILS_PATH), { recursive: true })
+
+    // Lade bestehende benutzerdefinierte Cocktails oder erstelle ein leeres Array
+    let customCocktails: Cocktail[] = []
+    if (fs.existsSync(COCKTAILS_PATH)) {
+      const data = fs.readFileSync(COCKTAILS_PATH, "utf8")
+      customCocktails = JSON.parse(data)
+    }
+
+    // Prüfe, ob der Cocktail bereits existiert
+    const index = customCocktails.findIndex((c) => c.id === cocktail.id)
+
+    if (index !== -1) {
+      // Aktualisiere den bestehenden Cocktail
+      customCocktails[index] = cocktail
+    } else {
+      // Füge den neuen Cocktail hinzu
+      customCocktails.push(cocktail)
+    }
+
+    // Speichere die aktualisierten Cocktails
+    fs.writeFileSync(COCKTAILS_PATH, JSON.stringify(customCocktails, null, 2), "utf8")
+
+    console.log("Rezept erfolgreich gespeichert")
     return { success: true }
   } catch (error) {
-    console.error("Error saving recipe to dynamic JSON:", error)
+    console.error("Fehler beim Speichern des Rezepts:", error)
     throw error
   }
 }
@@ -109,6 +231,8 @@ export async function saveRecipe(cocktail: Cocktail) {
 // Diese Funktion aktiviert eine Pumpe für eine bestimmte Zeit
 async function activatePump(pin: number, durationMs: number) {
   try {
+    const { fs, path, execPromise } = await getNodeModules()
+
     console.log(`[PUMP DEBUG] ==========================================`)
     console.log(`[PUMP DEBUG] Aktiviere Pumpe an GPIO Pin ${pin} für ${durationMs}ms`)
     console.log(`[PUMP DEBUG] Aktueller Arbeitsordner: ${process.cwd()}`)
@@ -309,6 +433,7 @@ export async function calibratePumpAction(pumpId: number, durationMs: number) {
       console.warn(`[CALIBRATE DEBUG] ⚠️  Pumpe ${pumpId} ist deaktiviert (enabled: false)`)
     }
 
+    const { fs, path, execPromise } = await getNodeModules()
     const PUMP_CONTROL_SCRIPT = path.join(process.cwd(), "pump_control.py")
     const roundedDuration = Math.round(durationMs)
 
@@ -357,6 +482,7 @@ export async function cleanPumpAction(pumpId: number, durationMs: number) {
     }
 
     // Aktiviere die Pumpe über das Python-Skript
+    const { fs, path, execPromise } = await getNodeModules()
     const PUMP_CONTROL_SCRIPT = path.join(process.cwd(), "pump_control.py")
     const roundedDuration = Math.round(durationMs)
 
@@ -397,6 +523,7 @@ export async function ventPumpAction(pumpId: number, durationMs: number) {
     }
 
     // Aktiviere die Pumpe über das Python-Skript
+    const { fs, path, execPromise } = await getNodeModules()
     const PUMP_CONTROL_SCRIPT = path.join(process.cwd(), "pump_control.py")
     const roundedDuration = Math.round(durationMs)
 

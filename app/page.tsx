@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { pumpConfig as initialPumpConfig } from "@/data/pump-config"
-import { makeCocktail, getPumpConfig, getAllCocktails } from "@/lib/cocktail-machine"
+import { makeCocktail, getPumpConfig, saveRecipe, getAllCocktails } from "@/lib/cocktail-machine"
 import { AlertCircle, Edit, ChevronLeft, ChevronRight, Trash2, Plus } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import type { Cocktail } from "@/types/cocktail"
@@ -137,14 +137,35 @@ export default function Home() {
 
   const loadCocktails = async () => {
     try {
-      console.log("[v0] Loading cocktails from dynamic JSON system...")
+      console.log("[v0] Loading cocktails...")
       const cocktails = await getAllCocktails()
-      console.log("[v0] Loaded cocktails from dynamic system:", cocktails.length)
+      console.log("[v0] Loaded cocktails from getAllCocktails:", cocktails.length)
 
-      setCocktailsData(cocktails)
-      console.log("[v0] Setting cocktails data with", cocktails.length, "cocktails")
+      // Load hidden cocktails from API instead of localStorage
+      try {
+        const response = await fetch("/api/hidden-cocktails")
+        if (response.ok) {
+          const data = await response.json()
+          const hiddenCocktails: string[] = data.hiddenCocktails || []
+          console.log("[v0] Hidden cocktails from API:", hiddenCocktails)
+
+          const visibleCocktails = cocktails.filter((cocktail) => !hiddenCocktails.includes(cocktail.id))
+          console.log("[v0] Visible cocktails after filtering:", visibleCocktails.length)
+          console.log("[v0] Filtered out cocktails:", cocktails.length - visibleCocktails.length)
+
+          setCocktailsData(visibleCocktails)
+          console.log("[v0] Setting cocktails data with", visibleCocktails.length, "cocktails")
+        } else {
+          console.log("[v0] Hidden cocktails API not available, showing all cocktails")
+          setCocktailsData(cocktails)
+        }
+      } catch (error) {
+        console.error("[v0] Error loading hidden cocktails:", error)
+        console.log("[v0] Fallback: showing all cocktails")
+        setCocktailsData(cocktails)
+      }
     } catch (error) {
-      console.error("Fehler beim Laden der Cocktails:", error)
+      console.error("Fehler beim Laden der Daten:", error)
       console.log("[v0] Using fallback cocktails from static data")
       try {
         const { cocktails } = await import("@/data/cocktails")
@@ -324,103 +345,43 @@ export default function Home() {
 
   const handleImageSave = async (updatedCocktail: Cocktail) => {
     try {
-      const response = await fetch("/api/cocktails", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ cocktail: updatedCocktail }),
-      })
-
-      if (!response.ok) {
-        throw new Error("Failed to save cocktail image to server")
-      }
+      await saveRecipe(updatedCocktail)
 
       // Aktualisiere die lokale Liste
       setCocktailsData((prev) => prev.map((c) => (c.id === updatedCocktail.id ? updatedCocktail : c)))
 
       // Aktualisiere auch die Füllstände für neue Zutaten
       await loadIngredientLevels()
-
-      toast({
-        title: "Bild gespeichert",
-        description: `Bild für ${updatedCocktail.name} wurde erfolgreich aktualisiert.`,
-      })
     } catch (error) {
       console.error("Fehler beim Speichern des Bildes:", error)
-      toast({
-        title: "Fehler",
-        description: "Bild konnte nicht gespeichert werden.",
-        variant: "destructive",
-      })
     }
   }
 
   const handleRecipeSave = async (updatedCocktail: Cocktail) => {
     try {
-      const response = await fetch("/api/cocktails", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ cocktail: updatedCocktail }),
-      })
-
-      if (!response.ok) {
-        throw new Error("Failed to save cocktail to server")
-      }
+      await saveRecipe(updatedCocktail)
 
       // Aktualisiere die lokale Liste
       setCocktailsData((prev) => prev.map((c) => (c.id === updatedCocktail.id ? updatedCocktail : c)))
 
       // Aktualisiere auch die Füllstände für neue Zutaten
       await loadIngredientLevels()
-
-      toast({
-        title: "Rezept gespeichert",
-        description: `${updatedCocktail.name} wurde erfolgreich aktualisiert.`,
-      })
     } catch (error) {
       console.error("Fehler beim Speichern des Rezepts:", error)
-      toast({
-        title: "Fehler",
-        description: "Rezept konnte nicht gespeichert werden.",
-        variant: "destructive",
-      })
     }
   }
 
   const handleNewRecipeSave = async (newCocktail: Cocktail) => {
     try {
-      const response = await fetch("/api/cocktails", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.JSON.stringify({ cocktail: newCocktail }),
-      })
-
-      if (!response.ok) {
-        throw new Error("Failed to save new cocktail to server")
-      }
+      await saveRecipe(newCocktail)
 
       // Füge den neuen Cocktail zur lokalen Liste hinzu
       setCocktailsData((prev) => [...prev, newCocktail])
 
       // Aktualisiere auch die Füllstände für neue Zutaten
       await loadIngredientLevels()
-
-      toast({
-        title: "Neues Rezept erstellt",
-        description: `${newCocktail.name} wurde erfolgreich hinzugefügt.`,
-      })
     } catch (error) {
       console.error("Fehler beim Speichern des neuen Rezepts:", error)
-      toast({
-        title: "Fehler",
-        description: "Neues Rezept konnte nicht gespeichert werden.",
-        variant: "destructive",
-      })
     }
   }
 
@@ -437,41 +398,42 @@ export default function Home() {
     if (!cocktailToDelete) return
 
     try {
-      console.log("[v0] Permanently deleting cocktail:", cocktailToDelete.id)
+      console.log("[v0] Deleting/hiding cocktail:", cocktailToDelete.id)
 
-      const response = await fetch(`/api/cocktails?id=${cocktailToDelete.id}`, {
-        method: "DELETE",
-      })
+      // Get current hidden cocktails from API
+      const response = await fetch("/api/hidden-cocktails")
+      const data = await response.json()
+      const hiddenCocktails: string[] = data.hiddenCocktails || []
+      console.log("[v0] Current hidden cocktails before adding:", hiddenCocktails)
 
-      if (!response.ok) {
-        throw new Error("Failed to delete cocktail from server")
+      // Add cocktail ID to hidden list if not already there
+      if (!hiddenCocktails.includes(cocktailToDelete.id)) {
+        hiddenCocktails.push(cocktailToDelete.id)
+
+        // Save updated list to API
+        await fetch("/api/hidden-cocktails", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ hiddenCocktails }),
+        })
+        console.log("[v0] Updated hidden cocktails via API:", hiddenCocktails)
+      } else {
+        console.log("[v0] Cocktail already in hidden list")
       }
 
-      const data = await response.json()
-      console.log("[v0] Cocktail deleted from server:", data.message)
-
-      // Remove from local state
       setCocktailsData((prev) => prev.filter((c) => c.id !== cocktailToDelete.id))
       console.log("[v0] Removed cocktail from local state")
 
-      // If the deleted cocktail was selected, reset selection
+      // If the hidden cocktail was selected, reset selection
       if (selectedCocktail?.id === cocktailToDelete.id) {
         setSelectedCocktail(null)
       }
 
       setCocktailToDelete(null)
-
-      toast({
-        title: "Cocktail gelöscht",
-        description: `${cocktailToDelete.name} wurde erfolgreich gelöscht.`,
-      })
     } catch (error) {
-      console.error("Fehler beim Löschen des Cocktails:", error)
-      toast({
-        title: "Fehler",
-        description: "Cocktail konnte nicht gelöscht werden.",
-        variant: "destructive",
-      })
+      console.error("Fehler beim Ausblenden des Cocktails:", error)
       throw error
     }
   }
