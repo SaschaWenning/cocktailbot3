@@ -615,7 +615,7 @@ export default function RecipeEditor({ isOpen, onClose, cocktail, onSave, onRequ
                     key={key}
                     type="button"
                     onClick={() => handleKeyPress(key)}
-                    className="flex-1 text-sm bg-gray-700 hover:bg-gray-600 text-white min-h-0 h-8"
+                    className="flex-1 text-sm bg-gray-700 hover:bg-gray-600 text-white min-h-0 h-12"
                   >
                     {displayKey}
                   </Button>
@@ -632,7 +632,7 @@ export default function RecipeEditor({ isOpen, onClose, cocktail, onSave, onRequ
             <Button
               type="button"
               onClick={handleShift}
-              className={`h-8 text-white flex flex-col items-center justify-center ${
+              className={`h-12 text-white flex flex-col items-center justify-center ${
                 isShiftActive ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-700 hover:bg-gray-600"
               }`}
             >
@@ -642,7 +642,7 @@ export default function RecipeEditor({ isOpen, onClose, cocktail, onSave, onRequ
             <Button
               type="button"
               onClick={handleCapsLock}
-              className={`h-8 text-white flex flex-col items-center justify-center ${
+              className={`h-12 text-white flex flex-col items-center justify-center ${
                 isCapsLockActive ? "bg-orange-600 hover:bg-orange-700" : "bg-gray-700 hover:bg-gray-600"
               }`}
             >
@@ -655,7 +655,7 @@ export default function RecipeEditor({ isOpen, onClose, cocktail, onSave, onRequ
         <Button
           type="button"
           onClick={handleBackspace}
-          className="h-8 bg-red-700 hover:bg-red-600 text-white flex flex-col items-center justify-center"
+          className="h-12 bg-red-700 hover:bg-red-600 text-white flex flex-col items-center justify-center"
         >
           <ArrowLeft className="h-3 w-3" />
           <span className="text-xs">Back</span>
@@ -663,7 +663,7 @@ export default function RecipeEditor({ isOpen, onClose, cocktail, onSave, onRequ
         <Button
           type="button"
           onClick={handleClear}
-          className="h-8 bg-yellow-700 hover:bg-yellow-600 text-white flex flex-col items-center justify-center"
+          className="h-12 bg-yellow-700 hover:bg-yellow-600 text-white flex flex-col items-center justify-center"
         >
           <X className="h-3 w-3" />
           <span className="text-xs">Clear</span>
@@ -671,14 +671,14 @@ export default function RecipeEditor({ isOpen, onClose, cocktail, onSave, onRequ
         <Button
           type="button"
           onClick={handleKeyboardCancel}
-          className="h-8 bg-gray-700 hover:bg-gray-600 text-white flex flex-col items-center justify-center"
+          className="h-12 bg-gray-700 hover:bg-gray-600 text-white flex flex-col items-center justify-center"
         >
           <span className="text-xs">Cancel</span>
         </Button>
         <Button
           type="button"
           onClick={handleKeyboardConfirm}
-          className="h-8 bg-green-700 hover:bg-green-600 text-white flex flex-col items-center justify-center"
+          className="h-12 bg-green-700 hover:bg-green-600 text-white flex flex-col items-center justify-center"
         >
           <Check className="h-3 w-3" />
           <span className="text-xs">OK</span>

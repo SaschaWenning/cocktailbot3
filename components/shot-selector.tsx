@@ -13,7 +13,7 @@ import { getAllIngredients } from "@/lib/ingredients"
 import PasswordModal from "./password-modal"
 import VirtualKeyboard from "./virtual-keyboard"
 import { Input } from "@/components/ui/input"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
 
 interface ShotSelectorProps {
   pumpConfig: PumpConfig[]
@@ -270,18 +270,18 @@ export default function ShotSelector({ pumpConfig, ingredientLevels, onShotCompl
                 </div>
 
                 {isEditingAmounts && (
-                  <div className="mt-3 flex gap-2 justify-center">
+                  <div className="mt-3 flex gap-2 justify-center items-center">
                     <Input
                       value={activeInput === "custom-size" ? inputValue : ""}
                       onClick={() => openKeyboard("custom-size")}
                       readOnly
                       placeholder="ml eingeben"
-                      className="w-32 px-3 py-2 text-base bg-[hsl(var(--cocktail-card-bg))] text-[hsl(var(--cocktail-text))] border border-[hsl(var(--cocktail-card-border))] rounded cursor-pointer text-center"
+                      className="w-32 h-10 px-3 py-2 text-base bg-[hsl(var(--cocktail-card-bg))] text-[hsl(var(--cocktail-text))] border border-[hsl(var(--cocktail-card-border))] rounded cursor-pointer text-center"
                     />
                     <button
                       type="button"
                       onClick={() => setIsEditingAmounts(false)}
-                      className="text-sm px-3 py-2 bg-[hsl(var(--cocktail-primary))] text-black rounded"
+                      className="w-32 h-10 px-3 py-2 text-base bg-[hsl(var(--cocktail-primary))] text-black rounded font-medium"
                     >
                       Fertig
                     </button>
@@ -321,31 +321,15 @@ export default function ShotSelector({ pumpConfig, ingredientLevels, onShotCompl
 
         <Dialog open={showKeyboardModal} onOpenChange={setShowKeyboardModal}>
           <DialogContent className="w-[95vw] h-[95vh] max-w-none max-h-none m-0 rounded-none bg-[hsl(var(--cocktail-bg))] border-[hsl(var(--cocktail-card-border))]">
-            <DialogHeader>
-              <DialogTitle className="text-[hsl(var(--cocktail-text))] text-center">
-                Shot-Größe eingeben (ml)
-              </DialogTitle>
-            </DialogHeader>
             <div className="flex flex-col h-full">
               <div className="flex-1 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-[hsl(var(--cocktail-primary))] mb-4">
-                    {inputValue || "0"} ml
-                  </div>
-                  <Input
-                    value={inputValue}
-                    readOnly
-                    className="w-32 text-center text-lg bg-[hsl(var(--cocktail-card-bg))] text-[hsl(var(--cocktail-text))] border-[hsl(var(--cocktail-card-border))]"
-                  />
-                </div>
-              </div>
-              <div className="flex-shrink-0">
                 <VirtualKeyboard
                   onChange={handleKeyboardInput}
                   onConfirm={handleKeyboardConfirm}
                   onCancel={handleKeyboardCancel}
                   value={inputValue}
                   layout="numeric"
+                  title="Shot-Größe eingeben (ml)"
                 />
               </div>
             </div>
