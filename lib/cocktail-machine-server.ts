@@ -30,10 +30,9 @@ const getPumpConfigPath = () => {
   return require("path").join(process.cwd(), "data", "pump-config.json")
 }
 
-// Pfad zur JSON-Datei für die Cocktail-Rezepte
 const getCocktailsPath = () => {
   if (typeof window !== "undefined") return ""
-  return require("path").join(process.cwd(), "data", "custom-cocktails.json")
+  return require("path").join(process.cwd(), "data", "cocktails.json")
 }
 
 // Funktion zum Laden der Pumpenkonfiguration
@@ -88,93 +87,46 @@ export async function savePumpConfig(pumpConfig: PumpConfig[]) {
   }
 }
 
-// Funktion zum Laden aller Cocktails (Standard + benutzerdefinierte)
 export async function getAllCocktails(): Promise<Cocktail[]> {
   try {
     console.log("[v0] Loading cocktails from getAllCocktails...")
 
-    // Lade die Standard-Cocktails
-    const { cocktails: defaultCocktails } = await import("@/data/cocktails")
-    console.log("[v0] Loaded default cocktails:", defaultCocktails.length)
+    const { fs, path } = await getNodeModules()
+    const COCKTAILS_PATH = getCocktailsPath()
 
-    // Keine zusätzlichen Cocktails definieren
-    const additionalCocktails: Cocktail[] = []
-
-    // Erstelle eine Map für die Cocktails, um Duplikate zu vermeiden
-    const cocktailMap = new Map<string, Cocktail>()
-
-    // Füge zuerst die Standard-Cocktails hinzu und ersetze "rum" durch "brauner rum"
-    for (const cocktail of defaultCocktails) {
-      // Überspringe den ursprünglichen Malibu Ananas, da wir eine aktualisierte Version haben
-      // Überspringe auch Gin Tonic und Cuba Libre
-      if (cocktail.id === "malibu-ananas" || cocktail.id === "gin-tonic" || cocktail.id === "cuba-libre") continue
-
-      // Erstelle eine Kopie des Cocktails
-      const updatedCocktail = { ...cocktail }
-
-      // Aktualisiere die Zutaten-Textliste
-      updatedCocktail.ingredients = cocktail.ingredients.map((ingredient) =>
-        ingredient.includes("Rum") && !ingredient.includes("Brauner Rum")
-          ? ingredient.replace("Rum", "Brauner Rum")
-          : ingredient,
-      )
-
-      // Füge den aktualisierten Cocktail zur Map hinzu
-      cocktailMap.set(cocktail.id, updatedCocktail)
+    // Stelle sicher, dass das data Verzeichnis existiert
+    const dataDir = path.dirname(COCKTAILS_PATH)
+    if (!fs.existsSync(dataDir)) {
+      console.log("[v0] Creating data directory:", dataDir)
+      fs.mkdirSync(dataDir, { recursive: true })
     }
 
-    // Füge die zusätzlichen Cocktails hinzu (in diesem Fall leer)
-    for (const cocktail of additionalCocktails) {
-      cocktailMap.set(cocktail.id, cocktail)
+    // Prüfe, ob die Cocktails-Datei existiert
+    if (fs.existsSync(COCKTAILS_PATH)) {
+      console.log("[v0] Loading cocktails from:", COCKTAILS_PATH)
+      const data = fs.readFileSync(COCKTAILS_PATH, "utf8")
+      const cocktails: Cocktail[] = JSON.parse(data)
+      console.log("[v0] Total cocktails loaded:", cocktails.length)
+      return cocktails
+    } else {
+      // Erstelle die Datei mit Standard-Cocktails
+      console.log("[v0] No cocktails file found, creating with default cocktails")
+      const { cocktails: defaultCocktails } = await import("@/data/cocktails")
+
+      // Aktualisiere Rum zu Brauner Rum in den Standard-Cocktails
+      const updatedCocktails = defaultCocktails.map((cocktail) => ({
+        ...cocktail,
+        ingredients: cocktail.ingredients.map((ingredient) =>
+          ingredient.includes("Rum") && !ingredient.includes("Brauner Rum")
+            ? ingredient.replace("Rum", "Brauner Rum")
+            : ingredient,
+        ),
+      }))
+
+      fs.writeFileSync(COCKTAILS_PATH, JSON.stringify(updatedCocktails, null, 2), "utf8")
+      console.log("[v0] Created cocktails file with", updatedCocktails.length, "default cocktails")
+      return updatedCocktails
     }
-
-    try {
-      const { fs, path } = await getNodeModules()
-      const COCKTAILS_PATH = getCocktailsPath()
-
-      // Stelle sicher, dass das data Verzeichnis existiert
-      const dataDir = path.dirname(COCKTAILS_PATH)
-      if (!fs.existsSync(dataDir)) {
-        console.log("[v0] Creating data directory:", dataDir)
-        fs.mkdirSync(dataDir, { recursive: true })
-      }
-
-      // Prüfe, ob die Datei für benutzerdefinierte Cocktails existiert
-      if (fs.existsSync(COCKTAILS_PATH)) {
-        console.log("[v0] Loading custom cocktails from:", COCKTAILS_PATH)
-        // Lese die Datei
-        const data = fs.readFileSync(COCKTAILS_PATH, "utf8")
-        const customCocktails: Cocktail[] = JSON.parse(data)
-        console.log("[v0] Loaded custom cocktails:", customCocktails.length)
-
-        // Aktualisiere und füge benutzerdefinierte Cocktails hinzu
-        for (const cocktail of customCocktails) {
-          // Erstelle eine Kopie des Cocktails
-          const updatedCocktail = { ...cocktail }
-
-          // Aktualisiere die Zutaten-Textliste
-          updatedCocktail.ingredients = cocktail.ingredients.map((ingredient) =>
-            ingredient.includes("Rum") && !ingredient.includes("Brauner Rum")
-              ? ingredient.replace("Rum", "Brauner Rum")
-              : ingredient,
-          )
-
-          // Füge den aktualisierten Cocktail zur Map hinzu
-          cocktailMap.set(cocktail.id, updatedCocktail)
-        }
-      } else {
-        console.log("[v0] No custom cocktails file found, creating empty file")
-        fs.writeFileSync(COCKTAILS_PATH, JSON.stringify([], null, 2), "utf8")
-        console.log("[v0] Created empty custom cocktails file at:", COCKTAILS_PATH)
-      }
-    } catch (customError) {
-      console.error("[v0] Error loading custom cocktails (continuing with defaults):", customError)
-    }
-
-    // Konvertiere die Map zurück in ein Array
-    const result = Array.from(cocktailMap.values())
-    console.log("[v0] Total cocktails loaded:", result.length)
-    return result
   } catch (error) {
     console.error("[v0] Error in getAllCocktails:", error)
 
@@ -190,7 +142,6 @@ export async function getAllCocktails(): Promise<Cocktail[]> {
   }
 }
 
-// Funktion zum Speichern eines Cocktail-Rezepts
 export async function saveRecipe(cocktail: Cocktail) {
   try {
     const { fs, path } = await getNodeModules()
@@ -201,28 +152,41 @@ export async function saveRecipe(cocktail: Cocktail) {
     // Stelle sicher, dass das Verzeichnis existiert
     fs.mkdirSync(path.dirname(COCKTAILS_PATH), { recursive: true })
 
-    // Lade bestehende benutzerdefinierte Cocktails oder erstelle ein leeres Array
-    let customCocktails: Cocktail[] = []
+    // Lade alle bestehenden Cocktails
+    let allCocktails: Cocktail[] = []
     if (fs.existsSync(COCKTAILS_PATH)) {
       const data = fs.readFileSync(COCKTAILS_PATH, "utf8")
-      customCocktails = JSON.parse(data)
+      allCocktails = JSON.parse(data)
+    } else {
+      // Falls die Datei nicht existiert, lade Standard-Cocktails
+      const { cocktails: defaultCocktails } = await import("@/data/cocktails")
+      allCocktails = defaultCocktails.map((c) => ({
+        ...c,
+        ingredients: c.ingredients.map((ingredient) =>
+          ingredient.includes("Rum") && !ingredient.includes("Brauner Rum")
+            ? ingredient.replace("Rum", "Brauner Rum")
+            : ingredient,
+        ),
+      }))
     }
 
     // Prüfe, ob der Cocktail bereits existiert
-    const index = customCocktails.findIndex((c) => c.id === cocktail.id)
+    const index = allCocktails.findIndex((c) => c.id === cocktail.id)
 
     if (index !== -1) {
       // Aktualisiere den bestehenden Cocktail
-      customCocktails[index] = cocktail
+      allCocktails[index] = cocktail
+      console.log("Cocktail aktualisiert:", cocktail.id)
     } else {
       // Füge den neuen Cocktail hinzu
-      customCocktails.push(cocktail)
+      allCocktails.push(cocktail)
+      console.log("Neuer Cocktail hinzugefügt:", cocktail.id)
     }
 
-    // Speichere die aktualisierten Cocktails
-    fs.writeFileSync(COCKTAILS_PATH, JSON.stringify(customCocktails, null, 2), "utf8")
+    // Speichere alle Cocktails zurück in die Datei
+    fs.writeFileSync(COCKTAILS_PATH, JSON.stringify(allCocktails, null, 2), "utf8")
 
-    console.log("Rezept erfolgreich gespeichert")
+    console.log("Rezept erfolgreich gespeichert. Total cocktails:", allCocktails.length)
     return { success: true }
   } catch (error) {
     console.error("Fehler beim Speichern des Rezepts:", error)
