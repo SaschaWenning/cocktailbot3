@@ -395,28 +395,26 @@ export function IngredientLevels() {
                     onClick={() => setTempValue(tempValue.slice(0, -1))}
                     className="flex-1 h-10 text-sm bg-red-600 text-white hover:bg-red-700"
                   >
-                    <ArrowLeft className="h-4 w-4 mr-1" />
-                    Löschen
+                    <X className="h-4 w-4" />
                   </Button>
                   <Button
                     onClick={() => setTempValue("")}
-                    className="flex-1 h-10 text-sm bg-yellow-600 text-white hover:bg-yellow-700"
+                    className="flex-1 h-10 text-sm bg-gray-600 text-white hover:bg-gray-700"
                   >
-                    <X className="h-4 w-4 mr-1" />
-                    Zurücksetzen
-                  </Button>
-                  <Button
-                    onClick={handleSave}
-                    className="flex-1 bg-[hsl(var(--cocktail-primary))] hover:bg-[hsl(var(--cocktail-primary-hover))] text-black font-bold h-10 text-sm"
-                  >
-                    Speichern
+                    <ArrowLeft className="h-4 w-4" />
                   </Button>
                   <Button
                     onClick={handleCancel}
                     variant="outline"
                     className="flex-1 border-2 border-[hsl(var(--cocktail-card-border))] hover:bg-[hsl(var(--cocktail-card-border))] font-bold h-10 bg-transparent text-[hsl(var(--cocktail-text))] text-sm"
                   >
-                    Abbrechen
+                    Abb
+                  </Button>
+                  <Button
+                    onClick={handleSave}
+                    className="flex-1 bg-[hsl(var(--cocktail-primary))] hover:bg-[hsl(var(--cocktail-primary-hover))] text-black font-bold h-10 text-sm"
+                  >
+                    Speichern
                   </Button>
                 </div>
 
