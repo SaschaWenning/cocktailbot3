@@ -23,23 +23,51 @@ export default function CocktailCard({ cocktail, onClick, onEdit }: CocktailCard
   const [ingredientLevels, setIngredientLevels] = useState<IngredientLevel[]>([])
   const [pumpConfig, setPumpConfig] = useState<PumpConfig[]>([])
   const [allIngredientsData, setAllIngredientsData] = useState<any[]>([])
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
+
+  const loadData = async () => {
+    try {
+      console.log("[v0] CocktailCard: Loading fresh data...")
+      const [levels, config, ingredients] = await Promise.all([
+        getIngredientLevels(),
+        getPumpConfig(),
+        getAllIngredients(),
+      ])
+      setIngredientLevels(levels)
+      setPumpConfig(config)
+      setAllIngredientsData(ingredients)
+      console.log("[v0] CocktailCard: Data loaded successfully")
+    } catch (error) {
+      console.error("[v0] Error loading data for availability check:", error)
+    }
+  }
 
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [levels, config, ingredients] = await Promise.all([
-          getIngredientLevels(),
-          getPumpConfig(),
-          getAllIngredients(),
-        ])
-        setIngredientLevels(levels)
-        setPumpConfig(config)
-        setAllIngredientsData(ingredients)
-      } catch (error) {
-        console.error("[v0] Error loading data for availability check:", error)
-      }
-    }
     loadData()
+  }, [])
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      console.log("[v0] CocktailCard: Auto-refreshing data...")
+      loadData()
+      setRefreshTrigger((prev) => prev + 1)
+    }, 5000) // Alle 5 Sekunden aktualisieren
+
+    return () => clearInterval(interval)
+  }, [])
+
+  useEffect(() => {
+    const handleRefresh = () => {
+      console.log("[v0] CocktailCard: Manual refresh triggered")
+      loadData()
+      setRefreshTrigger((prev) => prev + 1)
+    }
+
+    window.addEventListener("cocktail-data-refresh", handleRefresh)
+
+    return () => {
+      window.removeEventListener("cocktail-data-refresh", handleRefresh)
+    }
   }, [])
 
   const availability = useMemo(() => {
@@ -100,6 +128,7 @@ export default function CocktailCard({ cocktail, onClick, onEdit }: CocktailCard
       canMake,
       lowIngredients,
       missingIngredients: missingIngredients.length,
+      refreshTrigger,
     })
 
     return {
@@ -107,7 +136,7 @@ export default function CocktailCard({ cocktail, onClick, onEdit }: CocktailCard
       lowIngredients,
       missingIngredients,
     }
-  }, [cocktail, pumpConfig, ingredientLevels, allIngredientsData])
+  }, [cocktail, pumpConfig, ingredientLevels, allIngredientsData, refreshTrigger])
 
   useEffect(() => {
     const loadImage = async () => {

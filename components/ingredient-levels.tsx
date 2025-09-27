@@ -183,6 +183,10 @@ export function IngredientLevels() {
 
       addDebugLog("Reloading levels after save...")
       await loadLevels()
+
+      console.log("[v0] Ingredient-Levels: Triggering cocktail data refresh")
+      window.dispatchEvent(new CustomEvent("cocktail-data-refresh"))
+
       handleCancel()
     } catch (error) {
       addDebugLog(`Save error: ${error}`)
@@ -218,6 +222,9 @@ export function IngredientLevels() {
       await setIngredientLevels(next)
       skipReloadUntil.current = Date.now() + 800
       addDebugLog("All levels filled and saved")
+
+      console.log("[v0] Ingredient-Levels: Triggering cocktail data refresh after fill all")
+      window.dispatchEvent(new CustomEvent("cocktail-data-refresh"))
     } catch (error) {
       addDebugLog(`Fill all error: ${error}`)
     } finally {
@@ -241,6 +248,9 @@ export function IngredientLevels() {
       setLevels(next)
       await setIngredientLevels(next)
       skipReloadUntil.current = Date.now() + 800
+
+      console.log("[v0] Ingredient-Levels: Triggering cocktail data refresh after single fill")
+      window.dispatchEvent(new CustomEvent("cocktail-data-refresh"))
     } catch (error) {
       addDebugLog(`Fill single error: ${error}`)
     } finally {
