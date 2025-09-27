@@ -850,8 +850,46 @@ export default function Home() {
 
     const hasLowIngredients = cocktailLowIngredients.length > 0
 
-    const handleLowIngredientClickLocal = (e: React.MouseEvent) => {
-      handleLowIngredientClick(e)
+    const getFillLevelStatus = () => {
+      if (!hasLowIngredients) return "sufficient" // Genug da
+
+      const totalRecipeVolume = cocktail.recipe.reduce((total, item) => total + item.amount, 0)
+      const scaleFactor = selectedSize / totalRecipeVolume
+
+      let worstStatus = "sufficient"
+
+      for (const recipeItem of cocktail.recipe) {
+        if (recipeItem.manual || recipeItem.type !== "automatic") continue
+
+        const requiredAmount = Math.round(recipeItem.amount * scaleFactor)
+        const pump = pumpConfig.find((p) => p.ingredient === recipeItem.ingredientId && p.enabled)
+
+        if (!pump) continue
+
+        const level = ingredientLevels.find((l) => l.pumpId === pump.id)
+        const availableAmount = level?.currentLevel || 0
+
+        if (availableAmount < requiredAmount) {
+          worstStatus = "insufficient" // Rot - reicht nicht für den Cocktail
+        } else if (availableAmount < requiredAmount * 2 && worstStatus !== "insufficient") {
+          worstStatus = "warning" // Orange - reicht nur noch für einen Cocktail
+        }
+      }
+
+      return worstStatus
+    }
+
+    const fillLevelStatus = getFillLevelStatus()
+
+    const getFillLevelBadgeStyle = () => {
+      switch (fillLevelStatus) {
+        case "insufficient":
+          return "bg-red-600 text-white hover:bg-red-700"
+        case "warning":
+          return "bg-orange-500 text-white hover:bg-orange-600"
+        default:
+          return "bg-gray-500 text-white hover:bg-gray-600"
+      }
     }
 
     return (
@@ -880,8 +918,7 @@ export default function Home() {
                 {hasLowIngredients && (
                   <Badge
                     variant="destructive"
-                    className="text-xs bg-red-600 text-white px-2 py-1 cursor-pointer hover:bg-red-700 transition-colors"
-                    onClick={handleLowIngredientClickLocal}
+                    className={`text-xs px-2 py-1 transition-colors ${getFillLevelBadgeStyle()}`}
                   >
                     Niedrige Füllstände
                   </Badge>
