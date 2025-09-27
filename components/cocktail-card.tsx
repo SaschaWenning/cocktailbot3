@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -8,9 +10,16 @@ import type { Cocktail } from "@/types/cocktail"
 interface CocktailCardProps {
   cocktail: Cocktail
   onClick: () => void
+  lowIngredients?: string[]
+  onLowIngredientClick?: () => void
 }
 
-export default function CocktailCard({ cocktail, onClick }: CocktailCardProps) {
+export default function CocktailCard({
+  cocktail,
+  onClick,
+  lowIngredients = [],
+  onLowIngredientClick,
+}: CocktailCardProps) {
   const [imageSrc, setImageSrc] = useState<string>("")
   const [imageLoaded, setImageLoaded] = useState<boolean>(false)
 
@@ -118,6 +127,15 @@ export default function CocktailCard({ cocktail, onClick }: CocktailCardProps) {
     console.log(`[v0] ✅ Image loaded successfully for ${cocktail.name}: ${imageSrc}`)
   }
 
+  const hasLowIngredients = cocktail.recipe.some((item) => !item.manual && lowIngredients.includes(item.ingredientId))
+
+  const handleLowIngredientClick = (e: React.MouseEvent) => {
+    e.stopPropagation() // Verhindere dass der Cocktail-Click ausgelöst wird
+    if (onLowIngredientClick) {
+      onLowIngredientClick()
+    }
+  }
+
   return (
     <Card
       className="group overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-[1.02] cursor-pointer bg-black border-[hsl(var(--cocktail-card-border))] hover:border-[hsl(var(--cocktail-primary))]/50"
@@ -141,6 +159,16 @@ export default function CocktailCard({ cocktail, onClick }: CocktailCardProps) {
         <Badge className="absolute top-3 right-3 bg-[hsl(var(--cocktail-primary))] text-black font-medium shadow-lg">
           {cocktail.alcoholic ? "Alkoholisch" : "Alkoholfrei"}
         </Badge>
+
+        {hasLowIngredients && (
+          <div
+            className="absolute top-3 left-3 bg-red-500 text-white px-2 py-1 rounded-md text-xs font-medium cursor-pointer hover:bg-red-600 transition-colors shadow-lg"
+            onClick={handleLowIngredientClick}
+            title="Klicken um zu den Füllständen zu gelangen"
+          >
+            Niedrige Füllstände
+          </div>
+        )}
 
         {/* Debug Info */}
         {process.env.NODE_ENV === "development" && (
