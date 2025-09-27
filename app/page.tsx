@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -838,6 +840,33 @@ export default function Home() {
         return { ingredientName, ml }
       })
 
+    const cocktailLowIngredients = cocktail.recipe
+      .filter((item) => item.type === "automatic")
+      .filter((item) => lowIngredients.includes(item.ingredientId))
+
+    const hasLowIngredients = cocktailLowIngredients.length > 0
+
+    const handleLowIngredientClick = async (e: React.MouseEvent) => {
+      e.stopPropagation()
+
+      // Prüfe Tab-Konfiguration für Füllstände
+      if (tabConfig) {
+        const levelsTab = tabConfig.tabs.find((tab) => tab.id === "levels")
+
+        if (levelsTab && levelsTab.location === "service" && levelsTab.passwordProtected) {
+          // Füllstände sind im Service-Menü und passwortgeschützt
+          setActiveTab("service")
+          setShowPasswordModal(true)
+        } else {
+          // Füllstände sind auf der Startseite oder nicht passwortgeschützt
+          setActiveTab("levels")
+        }
+      } else {
+        // Fallback: direkt zu Füllständen navigieren
+        setActiveTab("levels")
+      }
+    }
+
     return (
       <Card className="overflow-hidden transition-all bg-black border-[hsl(var(--cocktail-card-border))] ring-2 ring-[hsl(var(--cocktail-primary))] shadow-2xl">
         <div className="flex flex-col md:flex-row">
@@ -860,12 +889,23 @@ export default function Home() {
               >
                 {cocktail.name}
               </h3>
-              <Badge
-                variant={cocktail.alcoholic ? "default" : "default"}
-                className="text-sm bg-[hsl(var(--cocktail-primary))] text-black px-3 py-1"
-              >
-                {cocktail.alcoholic ? "Alkoholisch" : "Alkoholfrei"}
-              </Badge>
+              <div className="flex gap-2 items-center">
+                {hasLowIngredients && (
+                  <Badge
+                    variant="destructive"
+                    className="text-xs bg-red-600 text-white px-2 py-1 cursor-pointer hover:bg-red-700 transition-colors"
+                    onClick={handleLowIngredientClick}
+                  >
+                    Niedrige Füllstände
+                  </Badge>
+                )}
+                <Badge
+                  variant={cocktail.alcoholic ? "default" : "default"}
+                  className="text-sm bg-[hsl(var(--cocktail-primary))] text-black px-3 py-1"
+                >
+                  {cocktail.alcoholic ? "Alkoholisch" : "Alkoholfrei"}
+                </Badge>
+              </div>
             </div>
             <div className="flex flex-col md:flex-row gap-6 flex-1">
               <div className="md:w-1/2">
