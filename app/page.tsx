@@ -73,6 +73,8 @@ export default function Home() {
   const [currentPage, setCurrentPage] = useState(1)
   const [virginCurrentPage, setVirginCurrentPage] = useState(1)
 
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
+
   const handleCocktailPageChange = (page: number) => {
     setCurrentPage(page)
     window.scrollTo({ top: 0, behavior: "smooth" })
@@ -133,6 +135,18 @@ export default function Home() {
     }
 
     loadData()
+  }, [])
+
+  useEffect(() => {
+    const handleRefresh = () => {
+      console.log("[v0] Main page: Received cocktail-data-refresh event")
+      setRefreshTrigger((prev) => prev + 1)
+      // Lade auch die Ingredient-Levels neu
+      loadIngredientLevels()
+    }
+
+    window.addEventListener("cocktail-data-refresh", handleRefresh)
+    return () => window.removeEventListener("cocktail-data-refresh", handleRefresh)
   }, [])
 
   const loadCocktails = async () => {
@@ -562,6 +576,8 @@ export default function Home() {
   }
 
   const ingredientAvailability = useMemo(() => {
+    console.log("[v0] Main page: Recalculating ingredient availability, refreshTrigger:", refreshTrigger)
+
     if (!selectedCocktail || !pumpConfig || !ingredientLevels) {
       return { available: true, missingIngredients: [] }
     }
@@ -584,6 +600,14 @@ export default function Home() {
       {} as Record<string, { name: string }>,
     )
 
+    console.log(
+      "[v0] Main page: Checking availability for",
+      cocktail.name,
+      "with",
+      cocktail.recipe.length,
+      "ingredients",
+    )
+
     for (const recipeItem of cocktail.recipe) {
       if (recipeItem.manual) {
         continue
@@ -592,7 +616,10 @@ export default function Home() {
       const requiredAmount = Math.round(recipeItem.amount * scaleFactor)
       const pump = pumpConfig.find((p) => p.ingredient === recipeItem.ingredientId && p.enabled)
 
+      console.log("[v0] Main page: Checking ingredient", recipeItem.ingredientId, "required:", requiredAmount + "ml")
+
       if (!pump) {
+        console.log("[v0] Main page: No pump found for", recipeItem.ingredientId)
         const ingredient = ingredientLookup[recipeItem.ingredientId]
         missingIngredients.push({
           ingredient: ingredient?.name || recipeItem.ingredientId,
@@ -603,9 +630,19 @@ export default function Home() {
       }
 
       const level = ingredientLevels.find((l) => l.pumpId === pump.id)
-      const availableAmount = level?.currentLevel || 0
+      const availableAmount = level?.currentLevel || level?.currentAmount || 0
+
+      console.log(
+        "[v0] Main page: Pump",
+        pump.id,
+        "available:",
+        availableAmount + "ml",
+        "required:",
+        requiredAmount + "ml",
+      )
 
       if (availableAmount < requiredAmount) {
+        console.log("[v0] Main page: Insufficient amount for", recipeItem.ingredientId)
         const ingredient = ingredientLookup[recipeItem.ingredientId]
         missingIngredients.push({
           ingredient: ingredient?.name || recipeItem.ingredientId,
@@ -615,11 +652,14 @@ export default function Home() {
       }
     }
 
-    return {
+    const result = {
       available: missingIngredients.length === 0,
       missingIngredients,
     }
-  }, [selectedCocktail, pumpConfig, ingredientLevels, selectedSize, allIngredientsData])
+
+    console.log("[v0] Main page: Availability result:", result)
+    return result
+  }, [selectedCocktail, pumpConfig, ingredientLevels, selectedSize, allIngredientsData, refreshTrigger]) // Füge refreshTrigger zu Dependencies hinzu
 
   const ingredientsAvailable = ingredientAvailability.available
 
