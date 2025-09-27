@@ -72,8 +72,15 @@ export default function CocktailCard({ cocktail, onClick, onEdit }: CocktailCard
 
   const availability = useMemo(() => {
     if (!pumpConfig || !ingredientLevels || !allIngredientsData) {
+      console.log("[v0] CocktailCard: Missing data for availability check")
       return { canMake: true, lowIngredients: [], missingIngredients: [] }
     }
+
+    console.log(`[v0] CocktailCard: Checking availability for ${cocktail.name}`)
+    console.log(
+      "[v0] CocktailCard: Current ingredient levels:",
+      ingredientLevels.map((l) => ({ pumpId: l.pumpId, level: l.currentLevel })),
+    )
 
     const selectedSize = 300 // Standard-Größe für die Prüfung
     const totalRecipeVolume = cocktail.recipe.reduce((total, item) => total + item.amount, 0)
@@ -97,8 +104,11 @@ export default function CocktailCard({ cocktail, onClick, onEdit }: CocktailCard
       const requiredAmount = Math.round(recipeItem.amount * scaleFactor)
       const pump = pumpConfig.find((p) => p.ingredient === recipeItem.ingredientId && p.enabled)
 
+      console.log(`[v0] CocktailCard: Checking ingredient ${recipeItem.ingredientId}, required: ${requiredAmount}ml`)
+
       if (!pump) {
         const ingredient = ingredientLookup[recipeItem.ingredientId]
+        console.log(`[v0] CocktailCard: No pump found for ingredient ${recipeItem.ingredientId}`)
         missingIngredients.push({
           ingredient: ingredient?.name || recipeItem.ingredientId,
           needed: requiredAmount,
@@ -110,23 +120,29 @@ export default function CocktailCard({ cocktail, onClick, onEdit }: CocktailCard
       const level = ingredientLevels.find((l) => l.pumpId === pump.id)
       const availableAmount = level?.currentLevel || 0
 
+      console.log(`[v0] CocktailCard: Pump ${pump.id}, available: ${availableAmount}ml, required: ${requiredAmount}ml`)
+
       if (availableAmount < requiredAmount) {
         const ingredient = ingredientLookup[recipeItem.ingredientId]
+        console.log(
+          `[v0] CocktailCard: Insufficient ${ingredient?.name || recipeItem.ingredientId}: ${availableAmount}ml < ${requiredAmount}ml`,
+        )
         missingIngredients.push({
           ingredient: ingredient?.name || recipeItem.ingredientId,
           needed: requiredAmount,
           available: availableAmount,
         })
       } else if (availableAmount < 100) {
+        console.log(`[v0] CocktailCard: Low level for ${recipeItem.ingredientId}: ${availableAmount}ml`)
         lowIngredients.push(recipeItem.ingredientId)
       }
     }
 
     const canMake = missingIngredients.length === 0
 
-    console.log(`[v0] CocktailCard availability for ${cocktail.name}:`, {
+    console.log(`[v0] CocktailCard availability result for ${cocktail.name}:`, {
       canMake,
-      lowIngredients,
+      lowIngredients: lowIngredients.length,
       missingIngredients: missingIngredients.length,
       refreshTrigger,
     })
