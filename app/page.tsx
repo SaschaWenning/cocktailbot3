@@ -1,7 +1,5 @@
 "use client"
 
-import type React from "react"
-
 import { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -45,7 +43,6 @@ export default function Home() {
   const [showSuccess, setShowSuccess] = useState(false)
   const [activeTab, setActiveTab] = useState("cocktails")
   const [showPasswordModal, setShowPasswordModal] = useState(false)
-  const [passwordTargetTab, setPasswordTargetTab] = useState<string | null>(null)
   const [showRecipeEditor, setShowRecipeEditor] = useState(false)
   const [showRecipeCreator, setShowRecipeCreator] = useState(false)
   const [showRecipeCreatorPasswordModal, setShowRecipeCreatorPasswordModal] = useState(false)
@@ -302,10 +299,7 @@ export default function Home() {
 
   const handlePasswordSuccess = () => {
     setShowPasswordModal(false)
-    if (passwordTargetTab) {
-      setActiveTab(passwordTargetTab)
-      setPasswordTargetTab(null)
-    } else if (activeTab === "cocktails" || activeTab === "virgin") {
+    if (activeTab === "cocktails" || activeTab === "virgin") {
       setShowRecipeEditor(true)
     } else if (activeTab === "service") {
       setActiveTab("service")
@@ -844,54 +838,6 @@ export default function Home() {
         return { ingredientName, ml }
       })
 
-    const cocktailLowIngredients = cocktail.recipe
-      .filter((item) => item.type === "automatic")
-      .filter((item) => lowIngredients.includes(item.ingredientId))
-
-    const hasLowIngredients = cocktailLowIngredients.length > 0
-
-    const getFillLevelStatus = () => {
-      if (!hasLowIngredients) return "sufficient" // Genug da
-
-      const totalRecipeVolume = cocktail.recipe.reduce((total, item) => total + item.amount, 0)
-      const scaleFactor = selectedSize / totalRecipeVolume
-
-      let worstStatus = "sufficient"
-
-      for (const recipeItem of cocktail.recipe) {
-        if (recipeItem.manual || recipeItem.type !== "automatic") continue
-
-        const requiredAmount = Math.round(recipeItem.amount * scaleFactor)
-        const pump = pumpConfig.find((p) => p.ingredient === recipeItem.ingredientId && p.enabled)
-
-        if (!pump) continue
-
-        const level = ingredientLevels.find((l) => l.pumpId === pump.id)
-        const availableAmount = level?.currentLevel || 0
-
-        if (availableAmount < requiredAmount) {
-          worstStatus = "insufficient" // Rot - reicht nicht für den Cocktail
-        } else if (availableAmount < requiredAmount * 2 && worstStatus !== "insufficient") {
-          worstStatus = "warning" // Orange - reicht nur noch für einen Cocktail
-        }
-      }
-
-      return worstStatus
-    }
-
-    const fillLevelStatus = getFillLevelStatus()
-
-    const getFillLevelBadgeStyle = () => {
-      switch (fillLevelStatus) {
-        case "insufficient":
-          return "bg-red-600 text-white hover:bg-red-700"
-        case "warning":
-          return "bg-orange-500 text-white hover:bg-orange-600"
-        default:
-          return "bg-gray-500 text-white hover:bg-gray-600"
-      }
-    }
-
     return (
       <Card className="overflow-hidden transition-all bg-black border-[hsl(var(--cocktail-card-border))] ring-2 ring-[hsl(var(--cocktail-primary))] shadow-2xl">
         <div className="flex flex-col md:flex-row">
@@ -914,22 +860,12 @@ export default function Home() {
               >
                 {cocktail.name}
               </h3>
-              <div className="flex gap-2 items-center">
-                {hasLowIngredients && (
-                  <Badge
-                    variant="destructive"
-                    className={`text-xs px-2 py-1 transition-colors ${getFillLevelBadgeStyle()}`}
-                  >
-                    Niedrige Füllstände
-                  </Badge>
-                )}
-                <Badge
-                  variant={cocktail.alcoholic ? "default" : "default"}
-                  className="text-sm bg-[hsl(var(--cocktail-primary))] text-black px-3 py-1"
-                >
-                  {cocktail.alcoholic ? "Alkoholisch" : "Alkoholfrei"}
-                </Badge>
-              </div>
+              <Badge
+                variant={cocktail.alcoholic ? "default" : "default"}
+                className="text-sm bg-[hsl(var(--cocktail-primary))] text-black px-3 py-1"
+              >
+                {cocktail.alcoholic ? "Alkoholisch" : "Alkoholfrei"}
+              </Badge>
             </div>
             <div className="flex flex-col md:flex-row gap-6 flex-1">
               <div className="md:w-1/2">
@@ -1131,8 +1067,7 @@ export default function Home() {
                   key={cocktail.id}
                   cocktail={cocktail}
                   onClick={() => setSelectedCocktail(cocktail)}
-                  lowIngredients={lowIngredients}
-                  onLowIngredientClick={() => setActiveTab("levels")}
+                  onEdit={() => handleRecipeEditClick(cocktail.id)} // Added recipe edit handler
                 />
               ))}
             </div>
@@ -1157,8 +1092,7 @@ export default function Home() {
                   key={cocktail.id}
                   cocktail={cocktail}
                   onClick={() => setSelectedCocktail(cocktail)}
-                  lowIngredients={lowIngredients}
-                  onLowIngredientClick={() => setActiveTab("levels")}
+                  onEdit={() => handleRecipeEditClick(cocktail.id)} // Added recipe edit handler
                 />
               ))}
             </div>
@@ -1254,14 +1188,6 @@ export default function Home() {
     syncLevels()
   }, [pumpConfig])
 
-  const handleLowIngredientClick = async (e: React.MouseEvent) => {
-    e.stopPropagation()
-
-    console.log("[v0] Low ingredient click - showing password modal for levels access")
-    setPasswordTargetTab("levels")
-    setShowPasswordModal(true)
-  }
-
   return (
     <div className="container mx-auto p-6 max-w-7xl">
       <header className="mb-8">
@@ -1332,10 +1258,7 @@ export default function Home() {
       {/* Modals */}
       <PasswordModal
         isOpen={showPasswordModal}
-        onClose={() => {
-          setShowPasswordModal(false)
-          setPasswordTargetTab(null) // Reset target tab on close
-        }}
+        onClose={() => setShowPasswordModal(false)}
         onSuccess={handlePasswordSuccess}
       />
 
@@ -1432,10 +1355,7 @@ export default function Home() {
       {/* Modals */}
       <PasswordModal
         isOpen={showPasswordModal}
-        onClose={() => {
-          setShowPasswordModal(false)
-          setPasswordTargetTab(null) // Reset target tab on close
-        }}
+        onClose={() => setShowPasswordModal(false)}
         onSuccess={handlePasswordSuccess}
       />
     </div>
