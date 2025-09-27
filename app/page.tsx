@@ -45,6 +45,7 @@ export default function Home() {
   const [showSuccess, setShowSuccess] = useState(false)
   const [activeTab, setActiveTab] = useState("cocktails")
   const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [passwordTargetTab, setPasswordTargetTab] = useState<string | null>(null)
   const [showRecipeEditor, setShowRecipeEditor] = useState(false)
   const [showRecipeCreator, setShowRecipeCreator] = useState(false)
   const [showRecipeCreatorPasswordModal, setShowRecipeCreatorPasswordModal] = useState(false)
@@ -301,7 +302,10 @@ export default function Home() {
 
   const handlePasswordSuccess = () => {
     setShowPasswordModal(false)
-    if (activeTab === "cocktails" || activeTab === "virgin") {
+    if (passwordTargetTab) {
+      setActiveTab(passwordTargetTab)
+      setPasswordTargetTab(null)
+    } else if (activeTab === "cocktails" || activeTab === "virgin") {
       setShowRecipeEditor(true)
     } else if (activeTab === "service") {
       setActiveTab("service")
@@ -846,25 +850,8 @@ export default function Home() {
 
     const hasLowIngredients = cocktailLowIngredients.length > 0
 
-    const handleLowIngredientClick = async (e: React.MouseEvent) => {
-      e.stopPropagation()
-
-      // Prüfe Tab-Konfiguration für Füllstände
-      if (tabConfig) {
-        const levelsTab = tabConfig.tabs.find((tab) => tab.id === "levels")
-
-        if (levelsTab && levelsTab.location === "service" && levelsTab.passwordProtected) {
-          // Füllstände sind im Service-Menü und passwortgeschützt
-          setActiveTab("service")
-          setShowPasswordModal(true)
-        } else {
-          // Füllstände sind auf der Startseite oder nicht passwortgeschützt
-          setActiveTab("levels")
-        }
-      } else {
-        // Fallback: direkt zu Füllständen navigieren
-        setActiveTab("levels")
-      }
+    const handleLowIngredientClickLocal = (e: React.MouseEvent) => {
+      handleLowIngredientClick(e)
     }
 
     return (
@@ -894,7 +881,7 @@ export default function Home() {
                   <Badge
                     variant="destructive"
                     className="text-xs bg-red-600 text-white px-2 py-1 cursor-pointer hover:bg-red-700 transition-colors"
-                    onClick={handleLowIngredientClick}
+                    onClick={handleLowIngredientClickLocal}
                   >
                     Niedrige Füllstände
                   </Badge>
@@ -1230,6 +1217,33 @@ export default function Home() {
     syncLevels()
   }, [pumpConfig])
 
+  const handleLowIngredientClick = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+
+    console.log("[v0] Low ingredient click - checking tab config...")
+
+    // Prüfe Tab-Konfiguration für Füllstände
+    if (tabConfig) {
+      const levelsTab = tabConfig.tabs.find((tab) => tab.id === "levels")
+      console.log("[v0] Found levels tab:", levelsTab)
+
+      if (levelsTab && levelsTab.location === "service" && levelsTab.passwordProtected) {
+        // Füllstände sind im Service-Menü und passwortgeschützt
+        console.log("[v0] Levels tab is password protected in service menu - showing password modal")
+        setPasswordTargetTab("levels")
+        setShowPasswordModal(true)
+      } else {
+        // Füllstände sind auf der Startseite oder nicht passwortgeschützt
+        console.log("[v0] Levels tab is not password protected - navigating directly")
+        setActiveTab("levels")
+      }
+    } else {
+      // Fallback: direkt zu Füllständen navigieren
+      console.log("[v0] No tab config available - navigating directly to levels")
+      setActiveTab("levels")
+    }
+  }
+
   return (
     <div className="container mx-auto p-6 max-w-7xl">
       <header className="mb-8">
@@ -1300,7 +1314,10 @@ export default function Home() {
       {/* Modals */}
       <PasswordModal
         isOpen={showPasswordModal}
-        onClose={() => setShowPasswordModal(false)}
+        onClose={() => {
+          setShowPasswordModal(false)
+          setPasswordTargetTab(null) // Reset target tab on close
+        }}
         onSuccess={handlePasswordSuccess}
       />
 
@@ -1397,7 +1414,10 @@ export default function Home() {
       {/* Modals */}
       <PasswordModal
         isOpen={showPasswordModal}
-        onClose={() => setShowPasswordModal(false)}
+        onClose={() => {
+          setShowPasswordModal(false)
+          setPasswordTargetTab(null) // Reset target tab on close
+        }}
         onSuccess={handlePasswordSuccess}
       />
     </div>
