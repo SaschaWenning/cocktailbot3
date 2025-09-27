@@ -194,6 +194,51 @@ export async function saveRecipe(cocktail: Cocktail) {
   }
 }
 
+export async function deleteRecipe(cocktailId: string) {
+  try {
+    const { fs, path } = await getNodeModules()
+    const COCKTAILS_PATH = getCocktailsPath()
+
+    console.log("[v0] Deleting cocktail from file:", cocktailId)
+
+    // Lade alle bestehenden Cocktails
+    let allCocktails: Cocktail[] = []
+    if (fs.existsSync(COCKTAILS_PATH)) {
+      const data = fs.readFileSync(COCKTAILS_PATH, "utf8")
+      allCocktails = JSON.parse(data)
+    } else {
+      // Falls die Datei nicht existiert, lade Standard-Cocktails
+      const { cocktails: defaultCocktails } = await import("@/data/cocktails")
+      allCocktails = defaultCocktails.map((c) => ({
+        ...c,
+        ingredients: c.ingredients.map((ingredient) =>
+          ingredient.includes("Rum") && !ingredient.includes("Brauner Rum")
+            ? ingredient.replace("Rum", "Brauner Rum")
+            : ingredient,
+        ),
+      }))
+    }
+
+    // Finde und entferne den Cocktail
+    const initialLength = allCocktails.length
+    allCocktails = allCocktails.filter((c) => c.id !== cocktailId)
+
+    if (allCocktails.length === initialLength) {
+      console.log("[v0] Cocktail not found in file:", cocktailId)
+      return { success: false, message: "Cocktail not found" }
+    }
+
+    // Speichere die aktualisierte Liste zurück in die Datei
+    fs.writeFileSync(COCKTAILS_PATH, JSON.stringify(allCocktails, null, 2), "utf8")
+
+    console.log("[v0] Cocktail successfully deleted from file. Remaining cocktails:", allCocktails.length)
+    return { success: true, message: `Cocktail ${cocktailId} deleted successfully` }
+  } catch (error) {
+    console.error("[v0] Error deleting cocktail from file:", error)
+    throw error
+  }
+}
+
 // Diese Funktion aktiviert eine Pumpe für eine bestimmte Zeit
 async function activatePump(pin: number, durationMs: number) {
   try {

@@ -1067,7 +1067,8 @@ export default function Home() {
                   key={cocktail.id}
                   cocktail={cocktail}
                   onClick={() => setSelectedCocktail(cocktail)}
-                  onEdit={() => handleRecipeEditClick(cocktail.id)} // Added recipe edit handler
+                  lowIngredients={lowIngredients}
+                  onLowIngredientClick={() => setActiveTab("levels")}
                 />
               ))}
             </div>
@@ -1092,7 +1093,8 @@ export default function Home() {
                   key={cocktail.id}
                   cocktail={cocktail}
                   onClick={() => setSelectedCocktail(cocktail)}
-                  onEdit={() => handleRecipeEditClick(cocktail.id)} // Added recipe edit handler
+                  lowIngredients={lowIngredients}
+                  onLowIngredientClick={() => setActiveTab("levels")}
                 />
               ))}
             </div>

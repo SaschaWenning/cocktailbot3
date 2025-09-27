@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { deleteRecipe } from "@/lib/cocktail-machine-server"
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,15 +11,17 @@ export async function POST(request: NextRequest) {
 
     console.log("[v0] API: Deleting cocktail:", cocktailId)
 
-    // In the browser environment, we can't actually delete files from the filesystem
-    // Instead, we'll return success and let the frontend handle the removal from its state
-    // This is appropriate for the v0 preview environment
+    const result = await deleteRecipe(cocktailId)
 
-    return NextResponse.json({
-      success: true,
-      message: `Cocktail ${cocktailId} deleted successfully`,
-      cocktailId,
-    })
+    if (result.success) {
+      return NextResponse.json({
+        success: true,
+        message: result.message,
+        cocktailId,
+      })
+    } else {
+      return NextResponse.json({ error: result.message }, { status: 404 })
+    }
   } catch (error) {
     console.error("[v0] Error deleting cocktail:", error)
     return NextResponse.json({ error: "Failed to delete cocktail" }, { status: 500 })
