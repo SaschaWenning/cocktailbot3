@@ -390,6 +390,36 @@ export function IngredientLevels() {
                   className="text-lg text-center font-bold border-2 focus:border-[hsl(var(--cocktail-primary))] bg-[hsl(var(--cocktail-bg))] text-[hsl(var(--cocktail-text))] h-12 text-2xl"
                 />
 
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => setTempValue(tempValue.slice(0, -1))}
+                    className="flex-1 h-10 text-sm bg-red-600 text-white hover:bg-red-700"
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-1" />
+                    Löschen
+                  </Button>
+                  <Button
+                    onClick={() => setTempValue("")}
+                    className="flex-1 h-10 text-sm bg-yellow-600 text-white hover:bg-yellow-700"
+                  >
+                    <X className="h-4 w-4 mr-1" />
+                    Zurücksetzen
+                  </Button>
+                  <Button
+                    onClick={handleSave}
+                    className="flex-1 bg-[hsl(var(--cocktail-primary))] hover:bg-[hsl(var(--cocktail-primary-hover))] text-black font-bold h-10 text-sm"
+                  >
+                    Speichern
+                  </Button>
+                  <Button
+                    onClick={handleCancel}
+                    variant="outline"
+                    className="flex-1 border-2 border-[hsl(var(--cocktail-card-border))] hover:bg-[hsl(var(--cocktail-card-border))] font-bold h-10 bg-transparent text-[hsl(var(--cocktail-text))] text-sm"
+                  >
+                    Abbrechen
+                  </Button>
+                </div>
+
                 <div className="space-y-2">
                   <div className="bg-black border border-[hsl(var(--cocktail-card-border))] rounded-lg p-2 shadow-lg w-full">
                     <div className="space-y-1">
@@ -422,37 +452,6 @@ export function IngredientLevels() {
                       ))}
                     </div>
                   </div>
-
-                  <div className="flex justify-center gap-1">
-                    <Button
-                      onClick={() => setTempValue(tempValue.slice(0, -1))}
-                      className="flex-1 h-8 text-sm bg-red-600 text-white hover:bg-red-700"
-                    >
-                      <ArrowLeft className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      onClick={() => setTempValue("")}
-                      className="flex-1 h-8 text-sm bg-yellow-600 text-white hover:bg-yellow-700"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="flex gap-3 pt-2">
-                  <Button
-                    onClick={handleSave}
-                    className="flex-1 bg-[hsl(var(--cocktail-primary))] hover:bg-[hsl(var(--cocktail-primary-hover))] text-black font-bold py-3 rounded-lg text-base h-12"
-                  >
-                    Speichern
-                  </Button>
-                  <Button
-                    onClick={handleCancel}
-                    variant="outline"
-                    className="flex-1 border-2 border-[hsl(var(--cocktail-card-border))] hover:bg-[hsl(var(--cocktail-card-border))] font-bold py-3 rounded-lg bg-transparent text-[hsl(var(--cocktail-text))] text-base h-12"
-                  >
-                    Abbrechen
-                  </Button>
                 </div>
               </div>
             </div>
