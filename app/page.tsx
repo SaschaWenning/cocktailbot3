@@ -1220,28 +1220,9 @@ export default function Home() {
   const handleLowIngredientClick = async (e: React.MouseEvent) => {
     e.stopPropagation()
 
-    console.log("[v0] Low ingredient click - checking tab config...")
-
-    // Prüfe Tab-Konfiguration für Füllstände
-    if (tabConfig) {
-      const levelsTab = tabConfig.tabs.find((tab) => tab.id === "levels")
-      console.log("[v0] Found levels tab:", levelsTab)
-
-      if (levelsTab && levelsTab.location === "service" && levelsTab.passwordProtected) {
-        // Füllstände sind im Service-Menü und passwortgeschützt
-        console.log("[v0] Levels tab is password protected in service menu - showing password modal")
-        setPasswordTargetTab("levels")
-        setShowPasswordModal(true)
-      } else {
-        // Füllstände sind auf der Startseite oder nicht passwortgeschützt
-        console.log("[v0] Levels tab is not password protected - navigating directly")
-        setActiveTab("levels")
-      }
-    } else {
-      // Fallback: direkt zu Füllständen navigieren
-      console.log("[v0] No tab config available - navigating directly to levels")
-      setActiveTab("levels")
-    }
+    console.log("[v0] Low ingredient click - showing password modal for levels access")
+    setPasswordTargetTab("levels")
+    setShowPasswordModal(true)
   }
 
   return (
