@@ -852,9 +852,10 @@ export default function Home() {
 
     useEffect(() => {
       const loadDetailImage = async () => {
-        console.log(`[v0] Loading detail image for ${cocktail.name}`)
+        console.log(`[v0] CocktailDetail: Loading detail image for ${cocktail.name}`)
+        console.log(`[v0] CocktailDetail: Original cocktail.image = ${cocktail.image}`)
         const imagePath = await findDetailImagePath(cocktail)
-        console.log(`[v0] Setting detail image path: ${imagePath}`)
+        console.log(`[v0] CocktailDetail: Setting detail image path: ${imagePath}`)
         setDetailImageSrc(imagePath)
       }
 
@@ -867,7 +868,8 @@ export default function Home() {
     }, [cocktail.id]) // Abhängigkeit von cocktail.id statt leerem Array
 
     const handleDetailImageError = () => {
-      console.log(`[v0] Image error for ${cocktail.name}, falling back to placeholder`)
+      console.log(`[v0] CocktailDetail: Image error for ${cocktail.name}, current src: ${detailImageSrc}`)
+      console.log(`[v0] CocktailDetail: Falling back to placeholder`)
       const placeholder = `/placeholder.svg?height=400&width=400&query=${encodeURIComponent(cocktail.id)}`
       setDetailImageSrc(placeholder)
     }
@@ -907,6 +909,7 @@ export default function Home() {
               alt={cocktail.name}
               className="w-full h-full object-cover rounded-t-lg md:rounded-l-lg md:rounded-t-none"
               onError={handleDetailImageError}
+              onLoad={() => console.log(`[v0] CocktailDetail: Image loaded successfully: ${detailImageSrc}`)}
               crossOrigin="anonymous"
               key={`${cocktail.image}-${detailImageSrc}`}
             />
