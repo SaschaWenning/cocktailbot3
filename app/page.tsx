@@ -30,6 +30,7 @@ import IngredientManager from "@/components/ingredient-manager"
 import PumpCalibration from "@/components/pump-calibration"
 import { Progress } from "@/components/ui/progress"
 import { Check, GlassWater } from "lucide-react"
+import TermsOfServiceModal from "@/components/terms-of-service-modal"
 
 // Anzahl der Cocktails pro Seite
 const COCKTAILS_PER_PAGE = 9
@@ -48,6 +49,9 @@ export default function Home() {
   const [showRecipeCreatorPasswordModal, setShowRecipeCreatorPasswordModal] = useState(false)
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false)
   const [cocktailToEdit, setCocktailToEdit] = useState<string | null>(null)
+  const [showTermsModal, setShowTermsModal] = useState(false)
+  const [termsAccepted, setTermsAccepted] = useState(false)
+
   const [cocktailToDelete, setCocktailToDelete] = useState<Cocktail | null>(null)
   const [cocktailsData, setCocktailsData] = useState<Cocktail[]>([])
   const [ingredientLevels, setIngredientLevels] = useState<IngredientLevel[]>([])
@@ -147,6 +151,19 @@ export default function Home() {
 
     window.addEventListener("cocktail-data-refresh", handleRefresh)
     return () => window.removeEventListener("cocktail-data-refresh", handleRefresh)
+  }, [])
+
+  useEffect(() => {
+    const handleHiddenCocktailsChange = () => {
+      console.log("[v0] Hidden cocktails changed, reloading cocktails...")
+      loadCocktails()
+    }
+
+    window.addEventListener("hidden-cocktails-changed", handleHiddenCocktailsChange)
+
+    return () => {
+      window.removeEventListener("hidden-cocktails-changed", handleHiddenCocktailsChange)
+    }
   }, [])
 
   const loadCocktails = async () => {
@@ -548,6 +565,9 @@ export default function Home() {
       await loadIngredientLevels()
       console.log("[v0] Ingredient levels after cocktail:", ingredientLevels)
 
+      console.log("[v0] Triggering cocktail-data-refresh event after cocktail preparation")
+      window.dispatchEvent(new CustomEvent("cocktail-data-refresh"))
+
       setTimeout(
         () => {
           setIsMaking(false)
@@ -764,19 +784,6 @@ export default function Home() {
       strategies.push(`${basePath}${filename}`)
     }
 
-    // Zusätzliche spezielle Strategien
-    strategies.push(
-      // Originaler Pfad
-      cocktail.image,
-      // Ohne führenden Slash
-      cocktail.image.startsWith("/") ? cocktail.image.substring(1) : cocktail.image,
-      // Mit führendem Slash
-      cocktail.image.startsWith("/") ? cocktail.image : `/${cocktail.image}`,
-      // API-Pfad als Fallback
-      `/api/image?path=${encodeURIComponent(`/home/pi/cocktailbot/cocktailbot-main/public/images/cocktails/${filename}`)}`,
-      `/api/image?path=${encodeURIComponent(`/home/pi/cocktailbot/cocktailbot-main/public/${filename}`)}`,
-    )
-
     // Entferne Duplikate
     const uniqueStrategies = [...new Set(strategies)]
 
@@ -847,6 +854,11 @@ export default function Home() {
       loadDetailImage()
     }, [cocktail])
 
+    useEffect(() => {
+      // Scroll nach oben wenn sich der Cocktail ändert
+      window.scrollTo({ top: 0, behavior: "smooth" })
+    }, [cocktail.id]) // Abhängigkeit von cocktail.id statt leerem Array
+
     const handleDetailImageError = () => {
       const placeholder = `/placeholder.svg?height=400&width=400&query=${encodeURIComponent(cocktail.id)}`
       setDetailImageSrc(placeholder)
@@ -881,16 +893,16 @@ export default function Home() {
     return (
       <Card className="overflow-hidden transition-all bg-black border-[hsl(var(--cocktail-card-border))] ring-2 ring-[hsl(var(--cocktail-primary))] shadow-2xl">
         <div className="flex flex-col md:flex-row">
-          <div className="relative w-full md:w-1/3 aspect-square md:aspect-auto">
+          <div className="relative w-full md:w-1/3 h-48 md:h-64">
             <img
               src={detailImageSrc || "/placeholder.svg"}
               alt={cocktail.name}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover rounded-t-lg md:rounded-l-lg md:rounded-t-none"
               onError={handleDetailImageError}
               crossOrigin="anonymous"
               key={`${cocktail.image}-${detailImageSrc}`}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-t-lg md:rounded-l-lg md:rounded-t-none" />
           </div>
           <div className="flex-1 p-6 flex flex-col">
             <div className="flex justify-between items-start mb-4">
@@ -925,7 +937,7 @@ export default function Home() {
 
                       return (
                         <li key={index} className={`flex items-center ${item.manual === true ? "opacity-60" : ""}`}>
-                          <span className="mr-2 text-[hsl(var(--cocktail-primary))]\">•</span>
+                          <span className="mr-2 text-[hsl(var(--cocktail-primary))]">•</span>
                           <span>
                             {Math.round(
                               item.amount * (selectedSize / (cocktail.recipe.reduce((t, it) => t + it.amount, 0) || 1)),
@@ -1228,9 +1240,28 @@ export default function Home() {
     syncLevels()
   }, [pumpConfig])
 
+  useEffect(() => {
+    const hasAcceptedTerms = localStorage.getItem("cocktail-app-terms-accepted")
+    if (hasAcceptedTerms === "true") {
+      setTermsAccepted(true)
+    } else {
+      setShowTermsModal(true)
+    }
+  }, [])
+
+  const handleTermsAccept = () => {
+    localStorage.setItem("cocktail-app-terms-accepted", "true")
+    setTermsAccepted(true)
+    setShowTermsModal(false)
+  }
+
+  if (!termsAccepted) {
+    return <TermsOfServiceModal isOpen={showTermsModal} onAccept={handleTermsAccept} />
+  }
+
   return (
-    <div className="container mx-auto p-6 max-w-7xl">
-      <header className="mb-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      <header className="mb-8 pt-6">
         <h1
           className="text-4xl font-bold text-center text-[hsl(var(--cocktail-text))] mb-2 cursor-pointer"
           onClick={handleTitleClick}
