@@ -769,13 +769,10 @@ export default function Home() {
       ? [originalExt, ...imageExtensions.filter((ext) => ext !== originalExt)]
       : imageExtensions
 
-    // Verschiedene Basispfade für alkoholische und alkoholfreie Cocktails
     const basePaths = [
       "/images/cocktails/", // Alkoholische Cocktails
       "/", // Alkoholfreie Cocktails (direkt im public/)
       "", // Ohne Pfad
-      "/public/images/cocktails/", // Vollständiger Pfad
-      "/public/", // Public Verzeichnis
     ]
 
     const strategies: string[] = []
@@ -788,6 +785,14 @@ export default function Home() {
       // Auch den originalen Dateinamen probieren
       strategies.push(`${basePath}${filename}`)
     }
+
+    strategies.push(
+      cocktail.image, // original, unverändert
+      cocktail.image.startsWith("/")
+        ? cocktail.image.slice(1) // ohne führenden Slash
+        : `/${cocktail.image}`, // mit führendem Slash
+      cocktail.image.split("?")[0], // ohne Query-Teil
+    )
 
     // Entferne Duplikate
     const uniqueStrategies = [...new Set(strategies)]
