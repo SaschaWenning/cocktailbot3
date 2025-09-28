@@ -103,6 +103,13 @@ export function IngredientLevels() {
 
         if (data.success && data.levels) {
           addDebugLog(`Setting ${data.levels.length} levels from API`)
+          const pump16 = data.levels.find((l: any) => l.pumpId === 16)
+          const pump17 = data.levels.find((l: any) => l.pumpId === 17)
+          console.log("[v0] Pump 16 data:", pump16)
+          console.log("[v0] Pump 17 data:", pump17)
+          addDebugLog(`Pump 16: ${pump16 ? `${pump16.currentLevel}ml` : "not found"}`)
+          addDebugLog(`Pump 17: ${pump17 ? `${pump17.currentLevel}ml` : "not found"}`)
+
           setLevels(data.levels)
           await setIngredientLevels(data.levels)
           return
@@ -119,6 +126,13 @@ export function IngredientLevels() {
     addDebugLog("Falling back to localStorage")
     const currentLevels = getIngredientLevels()
     addDebugLog(`localStorage has ${currentLevels.length} levels`)
+    const localPump16 = currentLevels.find((l: any) => l.pumpId === 16)
+    const localPump17 = currentLevels.find((l: any) => l.pumpId === 17)
+    console.log("[v0] Local Pump 16 data:", localPump16)
+    console.log("[v0] Local Pump 17 data:", localPump17)
+    addDebugLog(`Local Pump 16: ${localPump16 ? `${localPump16.currentLevel}ml` : "not found"}`)
+    addDebugLog(`Local Pump 17: ${localPump17 ? `${localPump17.currentLevel}ml` : "not found"}`)
+
     setLevels(currentLevels)
   }
 
@@ -270,6 +284,17 @@ export function IngredientLevels() {
 
   const enabledLevels = levels.filter((level) => {
     const pump = pumpConfig.find((p) => p.id === level.pumpId)
+    if (level.pumpId === 16 || level.pumpId === 17) {
+      console.log(`[v0] Pump ${level.pumpId} filter check:`, {
+        level: level,
+        pump: pump,
+        enabled: pump?.enabled,
+        willShow: pump?.enabled !== false,
+      })
+      addDebugLog(
+        `Pump ${level.pumpId}: pump found=${!!pump}, enabled=${pump?.enabled}, will show=${pump?.enabled !== false}`,
+      )
+    }
     return pump?.enabled !== false
   })
 
