@@ -17,6 +17,7 @@ import {
   setIngredientLevels,
   type IngredientLevel,
 } from "@/lib/ingredient-level-service"
+import { getIngredientById } from "@/lib/ingredients"
 
 export function IngredientLevels() {
   const [levels, setLevels] = useState<IngredientLevel[]>([])
@@ -129,9 +130,12 @@ export function IngredientLevels() {
   }
 
   const getIngredientDisplayName = (ingredientId: string) => {
-    const pump = pumpConfig.find((p) => p.ingredient === ingredientId)
-    if (!pump) return ingredientId
+    const ingredient = getIngredientById(ingredientId)
+    if (ingredient) {
+      return ingredient.name
+    }
 
+    // Fallback: Formatiere den ingredientId falls nicht gefunden
     return ingredientId
       .split("-")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
