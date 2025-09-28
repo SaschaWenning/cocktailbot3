@@ -751,85 +751,73 @@ export default function Home() {
 
   // Erweiterte Bildlogik für Cocktail-Detail
   const findDetailImagePath = async (cocktail: Cocktail): Promise<string> => {
-    if (!cocktail.image) {
-      console.log(`[v0] No image specified for ${cocktail.name}, using placeholder`)
-      return `/placeholder.svg?height=400&width=400&query=${encodeURIComponent(cocktail.name)}`
-    }
-
-    // Extrahiere den Dateinamen aus dem Pfad
-    const filename = cocktail.image.split("/").pop() || cocktail.image
-    const filenameWithoutExt = filename.replace(/\.[^/.]+$/, "") // Entferne Dateierweiterung
-    const originalExt = filename.split(".").pop()?.toLowerCase() || ""
-
-    // Alle gängigen Bildformate
-    const imageExtensions = ["jpg", "jpeg", "png", "webp", "gif", "bmp", "svg"]
-
-    // Verwende originale Erweiterung zuerst, dann alle anderen
-    const extensionsToTry = originalExt
-      ? [originalExt, ...imageExtensions.filter((ext) => ext !== originalExt)]
-      : imageExtensions
-
-    const basePaths = [
-      "/images/cocktails/", // Alkoholische Cocktails
-      "/", // Alkoholfreie Cocktails (direkt im public/)
-      "", // Ohne Pfad
-    ]
-
-    const strategies: string[] = []
-
-    // Generiere alle Kombinationen von Pfaden und Dateierweiterungen
-    for (const basePath of basePaths) {
-      for (const ext of extensionsToTry) {
-        strategies.push(`${basePath}${filenameWithoutExt}.${ext}`)
-      }
-      // Auch den originalen Dateinamen probieren
-      strategies.push(`${basePath}${filename}`)
-    }
-
-    strategies.push(
-      cocktail.image, // original, unverändert
-      cocktail.image.startsWith("/")
-        ? cocktail.image.slice(1) // ohne führenden Slash
-        : `/${cocktail.image}`, // mit führendem Slash
-      cocktail.image.split("?")[0], // ohne Query-Teil
-    )
-
-    // Entferne Duplikate
-    const uniqueStrategies = [...new Set(strategies)]
-
-    console.log(
-      `[v0] Testing ${uniqueStrategies.length} detail image strategies for ${cocktail.name}:`,
-      uniqueStrategies.slice(0, 10),
-    )
-
-    for (let i = 0; i < uniqueStrategies.length; i++) {
-      const testPath = uniqueStrategies[i]
-
-      try {
-        const img = new Image()
-        img.crossOrigin = "anonymous" // Für CORS
-
-        const loadPromise = new Promise<boolean>((resolve) => {
-          img.onload = () => resolve(true)
-          img.onerror = () => resolve(false)
-        })
-
-        img.src = testPath
-        const success = await loadPromise
-
-        if (success) {
-          console.log(`[v0] ✅ Found working detail image for ${cocktail.name}: ${testPath}`)
-          return testPath
-        }
-      } catch (error) {
-        // Fehler ignorieren und nächste Strategie versuchen
-      }
-    }
-
-    // Fallback auf Platzhalter
-    console.log(`[v0] ❌ No working detail image found for ${cocktail.name}, using placeholder`)
+  if (!cocktail.image) {
+    console.log(`[v0] No image specified for ${cocktail.name}, using placeholder`)
     return `/placeholder.svg?height=400&width=400&query=${encodeURIComponent(cocktail.name)}`
   }
+
+  // Dateiname aus dem Pfad
+  const filename = cocktail.image.split("/").pop() || cocktail.image
+  const filenameWithoutExt = filename.replace(/\.[^/.]+$/, "") // Erweiterung entfernen
+  const originalExt = filename.split(".").pop()?.toLowerCase() || ""
+
+  // Gängige Bildformate
+  const imageExtensions = ["jpg", "jpeg", "png", "webp", "gif", "bmp", "svg"]
+
+  // Erst originale Erweiterung, dann die anderen probieren
+  const extensionsToTry = originalExt
+    ? [originalExt, ...imageExtensions.filter((ext) => ext !== originalExt)]
+    : imageExtensions
+
+  // Nur echte Webpfade (im Browser gibt es kein /public)
+  const basePaths = ["/images/cocktails/", "/", ""]
+
+  const strategies: string[] = []
+
+  // Kombinationen aus Basispfad + Dateiname + Erweiterung
+  for (const basePath of basePaths) {
+    for (const ext of extensionsToTry) {
+      strategies.push(`${basePath}${filenameWithoutExt}.${ext}`)
+    }
+    // Original-Dateiname probieren (falls in JSON schon korrekt)
+    strategies.push(`${basePath}${filename}`)
+  }
+
+  // **Wichtige Fallbacks** wie in der Karten-Ansicht:
+  strategies.push(
+    cocktail.image,                                                  // originaler Pfad
+    cocktail.image.startsWith("/") ? cocktail.image.slice(1)         // ohne führenden Slash
+                                  : `/${cocktail.image}`,            // mit führenden Slash
+    cocktail.image.split("?")[0]                                     // ohne Query-String
+  )
+
+  const uniqueStrategies = [...new Set(strategies)]
+  console.log(
+    `[v0] Testing ${uniqueStrategies.length} detail image strategies for ${cocktail.name}:`,
+    uniqueStrategies.slice(0, 10)
+  )
+
+  // Der Reihe nach testen, bis eines lädt
+  for (let i = 0; i < uniqueStrategies.length; i++) {
+    const testPath = uniqueStrategies[i]
+    try {
+      const img = new Image()
+      img.crossOrigin = "anonymous"
+      const ok = await new Promise<boolean>((resolve) => {
+        img.onload = () => resolve(true)
+        img.onerror = () => resolve(false)
+      })
+      img.src = testPath
+      if (ok) {
+        console.log(`[v0] ✅ Found working detail image for ${cocktail.name}: ${testPath}`)
+        return testPath
+      }
+    } catch {}
+  }
+
+  console.log(`[v0] ❌ No working detail image found for ${cocktail.name}, using placeholder`)
+  return `/placeholder.svg?height=400&width=400&query=${encodeURIComponent(cocktail.name)}`
+}
 
   // Neue Komponente für die Cocktail-Detailansicht
   function CocktailDetail({
