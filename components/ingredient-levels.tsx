@@ -89,55 +89,27 @@ export function IngredientLevels() {
   const loadLevels = async () => {
     const nowTs = Date.now()
     if (fillingRef.current || editingRef.current || nowTs < skipReloadUntil.current) {
-      addDebugLog("Skipping loadLevels: filling/editing or skip window active")
       return
     }
     try {
-      addDebugLog("Loading levels from API...")
       const response = await fetch("/api/ingredient-levels")
-      addDebugLog(`API response status: ${response.status}`)
 
       if (response.ok) {
         const data = await response.json()
-        addDebugLog(`API response: ${JSON.stringify(data).substring(0, 100)}...`)
 
         if (data.success && data.levels) {
-          addDebugLog(`Setting ${data.levels.length} levels from API`)
-          const pump16 = data.levels.find((l: any) => l.pumpId === 16)
-          const pump17 = data.levels.find((l: any) => l.pumpId === 17)
-          console.log("[v0] Pump 16 data:", pump16)
-          console.log("[v0] Pump 17 data:", pump17)
-          addDebugLog(`Pump 16: ${pump16 ? `${pump16.currentLevel}ml` : "not found"}`)
-          addDebugLog(`Pump 17: ${pump17 ? `${pump17.currentLevel}ml` : "not found"}`)
-
           setLevels(data.levels)
           await setIngredientLevels(data.levels)
           return
-        } else {
-          addDebugLog(`API response invalid: success=${data.success}, levels=${!!data.levels}`)
         }
-      } else {
-        addDebugLog(`API request failed with status ${response.status}`)
       }
-    } catch (error) {
-      addDebugLog(`API error: ${error}`)
-    }
+    } catch (error) {}
 
-    addDebugLog("Falling back to localStorage")
     const currentLevels = getIngredientLevels()
-    addDebugLog(`localStorage has ${currentLevels.length} levels`)
-    const localPump16 = currentLevels.find((l: any) => l.pumpId === 16)
-    const localPump17 = currentLevels.find((l: any) => l.pumpId === 17)
-    console.log("[v0] Local Pump 16 data:", localPump16)
-    console.log("[v0] Local Pump 17 data:", localPump17)
-    addDebugLog(`Local Pump 16: ${localPump16 ? `${localPump16.currentLevel}ml` : "not found"}`)
-    addDebugLog(`Local Pump 17: ${localPump17 ? `${localPump17.currentLevel}ml` : "not found"}`)
-
     setLevels(currentLevels)
   }
 
   const handleManualRefresh = async () => {
-    addDebugLog("Manual refresh triggered")
     setIsRefreshing(true)
     await loadLevels()
     setTimeout(() => setIsRefreshing(false), 500)
@@ -149,7 +121,6 @@ export function IngredientLevels() {
       return ingredient.name
     }
 
-    // Fallback: Formatiere den ingredientId falls nicht gefunden
     return ingredientId
       .split("-")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -185,30 +156,23 @@ export function IngredientLevels() {
 
   const handleSave = async () => {
     try {
-      addDebugLog("Saving changes...")
       if (editingLevel) {
         const newLevel = Number.parseInt(tempValue) || 0
-        addDebugLog(`Updating level for pump ${editingLevel} to ${newLevel}ml`)
         await updateIngredientLevel(editingLevel, newLevel)
       } else if (editingSize) {
         const newSize = Number.parseInt(tempValue) || 100
-        addDebugLog(`Updating size for pump ${editingSize} to ${newSize}ml`)
         await updateContainerSize(editingSize, newSize)
       } else if (editingName) {
-        addDebugLog(`Updating name for pump ${editingName} to ${tempValue}`)
         await updateIngredientName(editingName, tempValue)
       }
 
-      addDebugLog("Reloading levels after save...")
       await loadLevels()
 
       console.log("[v0] Ingredient-Levels: Triggering cocktail data refresh")
       window.dispatchEvent(new CustomEvent("cocktail-data-refresh"))
 
       handleCancel()
-    } catch (error) {
-      addDebugLog(`Save error: ${error}`)
-    }
+    } catch (error) {}
   }
 
   const handleCancel = () => {
@@ -221,30 +185,23 @@ export function IngredientLevels() {
 
   const handleResetAll = async () => {
     try {
-      addDebugLog("Resetting all levels...")
       await resetAllLevels()
       await loadLevels()
-    } catch (error) {
-      addDebugLog(`Reset error: ${error}`)
-    }
+    } catch (error) {}
   }
 
   const handleFillAll = async () => {
     try {
       setIsFilling(true)
-      addDebugLog("Filling all levels to container size (batch)…")
       const now = new Date()
       const next = levels.map((l) => ({ ...l, currentLevel: Math.max(0, l.containerSize), lastUpdated: now }))
-      // optimistisches UI-Update
       setLevels(next)
       await setIngredientLevels(next)
       skipReloadUntil.current = Date.now() + 800
-      addDebugLog("All levels filled and saved")
 
       console.log("[v0] Ingredient-Levels: Triggering cocktail data refresh after fill all")
       window.dispatchEvent(new CustomEvent("cocktail-data-refresh"))
     } catch (error) {
-      addDebugLog(`Fill all error: ${error}`)
     } finally {
       setIsFilling(false)
     }
@@ -258,7 +215,6 @@ export function IngredientLevels() {
         setIsFilling(false)
         return
       }
-      addDebugLog(`Filling pump ${pumpId} to ${target.containerSize}ml (batch)…`)
       const now = new Date()
       const next = levels.map((l) =>
         l.pumpId === pumpId ? { ...l, currentLevel: Math.max(0, target.containerSize), lastUpdated: now } : l,
@@ -270,7 +226,6 @@ export function IngredientLevels() {
       console.log("[v0] Ingredient-Levels: Triggering cocktail data refresh after single fill")
       window.dispatchEvent(new CustomEvent("cocktail-data-refresh"))
     } catch (error) {
-      addDebugLog(`Fill single error: ${error}`)
     } finally {
       setIsFilling(false)
     }
@@ -284,17 +239,6 @@ export function IngredientLevels() {
 
   const enabledLevels = levels.filter((level) => {
     const pump = pumpConfig.find((p) => p.id === level.pumpId)
-    if (level.pumpId === 16 || level.pumpId === 17) {
-      console.log(`[v0] Pump ${level.pumpId} filter check:`, {
-        level: level,
-        pump: pump,
-        enabled: pump?.enabled,
-        willShow: pump?.enabled !== false,
-      })
-      addDebugLog(
-        `Pump ${level.pumpId}: pump found=${!!pump}, enabled=${pump?.enabled}, will show=${pump?.enabled !== false}`,
-      )
-    }
     return pump?.enabled !== false
   })
 
