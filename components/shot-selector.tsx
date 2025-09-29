@@ -148,6 +148,11 @@ export default function ShotSelector({ pumpConfig, ingredientLevels, onShotCompl
     if (activeInput === "custom-size" && selectedIngredient) {
       const value = Number.parseInt(inputValue)
       if (value > 0) {
+        setCustomShotSizes((prev) => ({
+          ...prev,
+          [selectedIngredient]: [...(prev[selectedIngredient] || []), value],
+        }))
+        setShotSize(value)
       }
     }
     setShowKeyboardModal(false)
@@ -211,19 +216,21 @@ export default function ShotSelector({ pumpConfig, ingredientLevels, onShotCompl
 
               <div className="w-full max-w-xs">
                 <h4 className="text-base mb-2 text-center text-[hsl(var(--cocktail-text))]">Shot-Größe wählen:</h4>
-                <div className="flex flex-wrap gap-2 justify-center">
-                  <button
-                    key={availableSizes}
-                    type="button"
-                    onClick={() => setShotSize(availableSizes)}
-                    className={`text-sm py-1 px-2 rounded bg-[hsl(var(--cocktail-card-bg))] ${
-                      shotSize === availableSizes
-                        ? "font-semibold border-b-2 border-[hsl(var(--cocktail-primary))] text-[hsl(var(--cocktail-primary))]"
-                        : "text-[hsl(var(--cocktail-text))] hover:text-[hsl(var(--cocktail-primary))]"
-                    }`}
-                  >
-                    {availableSizes}ml
-                  </button>
+                <div className="flex gap-3 justify-center">
+                  {availableSizes.map((size) => (
+                    <button
+                      key={size}
+                      type="button"
+                      onClick={() => setShotSize(size)}
+                      className={`min-w-[60px] text-sm py-2 px-3 rounded border transition-colors ${
+                        shotSize === size
+                          ? "bg-[hsl(var(--cocktail-primary))] text-black border-[hsl(var(--cocktail-primary))] font-semibold"
+                          : "bg-[hsl(var(--cocktail-card-bg))] text-[hsl(var(--cocktail-text-muted))] border-[hsl(var(--cocktail-card-border))] hover:text-[hsl(var(--cocktail-primary))] hover:border-[hsl(var(--cocktail-primary))]"
+                      }`}
+                    >
+                      {size}ml
+                    </button>
+                  ))}
                 </div>
               </div>
 

@@ -189,7 +189,7 @@ export default function CocktailCard({ cocktail, onClick, onEdit }: CocktailCard
       ? [originalExt, ...imageExtensions.filter((ext) => ext !== originalExt)]
       : imageExtensions
 
-    const basePaths = ["/", "/images/cocktails/", ""]
+    const basePaths = ["/images/cocktails/", "/", "", "/public/images/cocktails/", "/public/"]
 
     const strategies: string[] = []
 
