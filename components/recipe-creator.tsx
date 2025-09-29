@@ -225,7 +225,11 @@ export default function RecipeCreator({ isOpen, onClose, onSave, asTab = false }
         setImageUrl(keyboardValue)
         break
       case "newSize":
-        setNewSizeValue(keyboardValue)
+        const value = Number.parseInt(keyboardValue)
+        if (value > 0) {
+          addSize(value)
+          setNewSizeValue("")
+        }
         break
       default:
         if (keyboardMode.startsWith("amount-")) {
@@ -544,7 +548,10 @@ export default function RecipeCreator({ isOpen, onClose, onSave, asTab = false }
 
             <div className="flex-1 flex flex-col gap-2">
               {keys.map((row, rowIndex) => (
-                <div key={rowIndex} className="flex gap-1 justify-center flex-1">
+                <div
+                  key={rowIndex}
+                  className={`flex ${isNumericKeyboard ? "gap-3 justify-center" : "gap-1 justify-center"} flex-1`}
+                >
                   {row.map((key) => {
                     let displayKey = key
                     if (key.length === 1 && key.match(/[a-z]/)) {
@@ -558,7 +565,7 @@ export default function RecipeCreator({ isOpen, onClose, onSave, asTab = false }
                         key={key}
                         type="button"
                         onClick={() => handleKeyPress(key)}
-                        className="flex-1 text-sm bg-gray-700 hover:bg-gray-600 text-white min-h-0 h-12"
+                        className={`${isNumericKeyboard ? "w-20 h-12" : "flex-1 h-12"} text-sm bg-gray-700 hover:bg-gray-600 text-white min-h-0`}
                       >
                         {displayKey}
                       </Button>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Lock, Settings } from "lucide-react"
+import { Lock, Settings, Info } from "lucide-react"
 import PumpCleaning from "@/components/pump-cleaning"
 import PumpVenting from "@/components/pump-venting"
 import PumpCalibration from "@/components/pump-calibration"
@@ -55,6 +55,7 @@ export default function ServiceMenu({
   const [activeServiceTab, setActiveServiceTab] = useState("")
   const [tabConfig, setTabConfig] = useState<AppConfig | null>(null)
   const [serviceTabs, setServiceTabs] = useState<string[]>([])
+  const [showInfoModal, setShowInfoModal] = useState(false)
 
   useEffect(() => {
     const loadTabConfig = async () => {
@@ -281,11 +282,11 @@ export default function ServiceMenu({
           </Button>
           <Button
             variant="outline"
-            onClick={() => setIsUnlocked(false)}
+            onClick={() => setShowInfoModal(true)}
             className="bg-[hsl(var(--cocktail-card-bg))] text-[hsl(var(--cocktail-text))] border-[hsl(var(--cocktail-card-border))] hover:bg-[hsl(var(--cocktail-card-border))]"
           >
-            <Lock className="h-4 w-4 mr-2" />
-            Sperren
+            <Info className="h-4 w-4 mr-2" />
+            Info
           </Button>
         </div>
       </div>
@@ -303,6 +304,33 @@ export default function ServiceMenu({
       </div>
 
       <div className="min-h-[60vh]">{renderServiceContent()}</div>
+
+      {showInfoModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-[hsl(var(--cocktail-card-bg))] p-8 rounded-2xl shadow-2xl max-w-md mx-4 border border-[hsl(var(--cocktail-card-border))]">
+            <div className="flex flex-col items-center space-y-4">
+              <Info className="h-12 w-12 text-[hsl(var(--cocktail-primary))]" />
+              <h3 className="text-xl font-bold text-[hsl(var(--cocktail-text))]">Lizenzhinweis</h3>
+              <p className="text-[hsl(var(--cocktail-text-muted))] text-center text-sm leading-relaxed">
+                Diese Software und die dazugehörige Bauanleitung sind ausschließlich für den privaten Gebrauch bestimmt.
+                <br />
+                <br />
+                Jegliche gewerbliche Nutzung – insbesondere der Bau und Verkauf vom Cocktailbot, die Nutzung in
+                Gastronomie oder auf Events sowie die kommerzielle Verwendung der Software – ist ohne vorherige
+                schriftliche Lizenzvereinbarung mit dem Urheber nicht gestattet.
+                <br />
+                <br />📧 Kontakt für Lizenzanfragen: printcore@outlook.de
+              </p>
+              <Button
+                onClick={() => setShowInfoModal(false)}
+                className="bg-[hsl(var(--cocktail-primary))] hover:bg-[hsl(var(--cocktail-primary-hover))] text-black font-semibold px-6 py-2"
+              >
+                Verstanden
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
