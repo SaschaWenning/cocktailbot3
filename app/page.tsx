@@ -769,11 +769,10 @@ export default function Home() {
       ? [originalExt, ...imageExtensions.filter((ext) => ext !== originalExt)]
       : imageExtensions
 
-    // Verschiedene Basispfade für alkoholische und alkoholfreie Cocktails
     const basePaths = [
-      "/images/cocktails/",
-      "/",
-      ""
+      "/images/cocktails/", // Alkoholische Cocktails
+      "/", // Alkoholfreie Cocktails (direkt im public/)
+      "", // Ohne Pfad
     ]
 
     const strategies: string[] = []
@@ -785,14 +784,15 @@ export default function Home() {
       }
       // Auch den originalen Dateinamen probieren
       strategies.push(`${basePath}${filename}`)
-    
-    // Zusätzliche Fallbacks wie in der Karten-Ansicht
+    }
+
     strategies.push(
-      cocktail.image,
-      cocktail.image.startsWith("/") ? cocktail.image.slice(1) : `/${cocktail.image}`,
-      cocktail.image.split("?")[0]
+      cocktail.image, // original, unverändert
+      cocktail.image.startsWith("/")
+        ? cocktail.image.slice(1) // ohne führenden Slash
+        : `/${cocktail.image}`, // mit führendem Slash
+      cocktail.image.split("?")[0], // ohne Query-Teil
     )
-}
 
     // Entferne Duplikate
     const uniqueStrategies = [...new Set(strategies)]
@@ -980,8 +980,8 @@ export default function Home() {
                         onClick={() => setSelectedSize(size)}
                         className={`py-1.5 px-2.5 rounded-lg transition-all duration-200 font-medium text-xs ${
                           selectedSize === size
-                            ? "bg-[#00ff00] text-black shadow-lg scale-105"
-                            : "bg-white text-black hover:bg-gray-100 hover:scale-102 shadow-md"
+                            ? "bg-[hsl(var(--cocktail-primary))] text-black shadow-lg scale-105"
+                            : "bg-[hsl(var(--cocktail-card-bg))] text-[hsl(var(--cocktail-text-muted))] hover:bg-[hsl(var(--cocktail-card-border))] hover:text-[hsl(var(--cocktail-primary))] hover:scale-102 shadow-md"
                         }`}
                       >
                         {size}ml
