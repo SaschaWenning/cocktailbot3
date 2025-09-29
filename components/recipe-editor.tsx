@@ -488,7 +488,7 @@ export default function RecipeEditor({ isOpen, onClose, cocktail, onSave, onRequ
             key={index}
             className="grid grid-cols-12 gap-2 items-center p-3 bg-[hsl(var(--cocktail-card-bg))] rounded-lg border border-[hsl(var(--cocktail-card-border))]"
           >
-            <div className="col-span-4">
+            <div className="col-span-5">
               <Select value={item.ingredientId} onValueChange={(value) => handleIngredientChange(index, value)}>
                 <SelectTrigger className="bg-white border-[hsl(var(--cocktail-card-border))] text-black">
                   <SelectValue />
@@ -506,25 +506,27 @@ export default function RecipeEditor({ isOpen, onClose, cocktail, onSave, onRequ
                 </SelectContent>
               </Select>
             </div>
-            <div className="col-span-2 flex items-center gap-2">
+            <div className="col-span-1">
               <Input
                 type="text"
                 value={item.amount}
                 onClick={() => openKeyboard(`amount-${index}`, item.amount.toString(), true)}
                 readOnly
-                className="bg-white border-[hsl(var(--cocktail-card-border))] text-black cursor-pointer text-center flex-1"
+                className="bg-white border-[hsl(var(--cocktail-card-border))] text-black cursor-pointer text-center"
               />
+            </div>
+            <div className="col-span-2 flex items-center gap-2">
+              <span className="text-sm text-white">ml</span>
               <div className="flex flex-col items-center gap-1">
                 <Checkbox
                   checked={item.delayed || false}
                   onCheckedChange={(checked) => handleDelayedChange(index, checked as boolean)}
-                  className="w-2 h-2 border-white data-[state=checked]:bg-[hsl(var(--cocktail-primary))] data-[state=checked]:border-[hsl(var(--cocktail-primary))]"
+                  className="!w-1.5 !h-1.5 border-white data-[state=checked]:bg-[hsl(var(--cocktail-primary))] data-[state=checked]:border-[hsl(var(--cocktail-primary))]"
                 />
-                <span className="text-xs text-white text-center leading-none">Verzögert</span>
+                <span className="text-xs text-white">Verzögert</span>
               </div>
             </div>
-            <div className="col-span-1 text-sm text-white">ml</div>
-            <div className="col-span-2">
+            <div className="col-span-3">
               <Select
                 value={item.type}
                 onValueChange={(value: "automatic" | "manual") => handleTypeChange(index, value)}
@@ -542,7 +544,7 @@ export default function RecipeEditor({ isOpen, onClose, cocktail, onSave, onRequ
                 </SelectContent>
               </Select>
             </div>
-            <div className="col-span-2">
+            <div className="col-span-1">
               <Button
                 type="button"
                 size="sm"
