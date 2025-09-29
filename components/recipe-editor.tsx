@@ -436,7 +436,7 @@ export default function RecipeEditor({ isOpen, onClose, cocktail, onSave, onRequ
 
       <div className="space-y-2">
         <Label className="text-white">Cocktailgrößen für dieses Rezept</Label>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
           <Input
             value={newSizeInput}
             onClick={() => openKeyboard("newSize", newSizeInput, true)}
@@ -444,19 +444,6 @@ export default function RecipeEditor({ isOpen, onClose, cocktail, onSave, onRequ
             className="bg-white border-[hsl(var(--cocktail-card-border))] text-black h-10 flex-1 cursor-pointer"
             placeholder="ml eingeben"
           />
-          <Button
-            type="button"
-            onClick={() => {
-              const value = Number.parseInt(newSizeInput)
-              if (value > 0) {
-                addSize(value)
-                setNewSizeInput("")
-              }
-            }}
-            className="bg-[hsl(var(--cocktail-primary))] text-black hover:bg-[hsl(var(--cocktail-primary-hover))]"
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
         </div>
         {sizes.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-2">
@@ -519,14 +506,22 @@ export default function RecipeEditor({ isOpen, onClose, cocktail, onSave, onRequ
                 </SelectContent>
               </Select>
             </div>
-            <div className="col-span-2">
+            <div className="col-span-2 flex items-center gap-2">
               <Input
                 type="text"
                 value={item.amount}
                 onClick={() => openKeyboard(`amount-${index}`, item.amount.toString(), true)}
                 readOnly
-                className="bg-white border-[hsl(var(--cocktail-card-border))] text-black cursor-pointer text-center"
+                className="bg-white border-[hsl(var(--cocktail-card-border))] text-black cursor-pointer text-center flex-1"
               />
+              <div className="flex flex-col items-center gap-1">
+                <Checkbox
+                  checked={item.delayed || false}
+                  onCheckedChange={(checked) => handleDelayedChange(index, checked as boolean)}
+                  className="w-2 h-2 border-white data-[state=checked]:bg-[hsl(var(--cocktail-primary))] data-[state=checked]:border-[hsl(var(--cocktail-primary))]"
+                />
+                <span className="text-xs text-white text-center leading-none">Verzögert</span>
+              </div>
             </div>
             <div className="col-span-1 text-sm text-white">ml</div>
             <div className="col-span-2">
@@ -547,17 +542,7 @@ export default function RecipeEditor({ isOpen, onClose, cocktail, onSave, onRequ
                 </SelectContent>
               </Select>
             </div>
-            <div className="col-span-1 flex justify-center">
-              <div className="flex flex-col items-center gap-1">
-                <Checkbox
-                  checked={item.delayed || false}
-                  onCheckedChange={(checked) => handleDelayedChange(index, checked as boolean)}
-                  className="w-3 h-3 border-white data-[state=checked]:bg-[hsl(var(--cocktail-primary))] data-[state=checked]:border-[hsl(var(--cocktail-primary))]"
-                />
-                <span className="text-xs text-white">Verzögert</span>
-              </div>
-            </div>
-            <div className="col-span-1">
+            <div className="col-span-2">
               <Button
                 type="button"
                 size="sm"
