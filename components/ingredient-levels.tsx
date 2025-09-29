@@ -299,13 +299,20 @@ export function IngredientLevels() {
                 <CardHeader className="pb-3">
                   <CardTitle className="text-xl text-[hsl(var(--cocktail-text))] font-bold flex justify-between items-center">
                     <span className="truncate">{displayName}</span>
+                    <Button
+                      size="sm"
+                      onClick={() => handleFillSingle(level.pumpId)}
+                      className="h-8 px-3 bg-[hsl(var(--cocktail-primary))] hover:bg-[hsl(var(--cocktail-primary-hover))] text-black text-xs font-semibold"
+                    >
+                      Auffüllen
+                    </Button>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm text-[hsl(var(--cocktail-text-muted))]">
                       <span>Füllstand:</span>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 ml-auto">
                         <Button
                           size="sm"
                           variant="ghost"
@@ -313,13 +320,6 @@ export function IngredientLevels() {
                           className="h-6 px-2 text-[hsl(var(--cocktail-text))] hover:bg-[hsl(var(--cocktail-card-border))]"
                         >
                           {level.currentLevel}ml
-                        </Button>
-                        <Button
-                          size="sm"
-                          onClick={() => handleFillSingle(level.pumpId)}
-                          className="h-6 px-2 bg-[hsl(var(--cocktail-primary))] hover:bg-[hsl(var(--cocktail-primary-hover))] text-black text-xs"
-                        >
-                          Auffüllen
                         </Button>
                       </div>
                     </div>
@@ -336,14 +336,16 @@ export function IngredientLevels() {
 
                   <div className="flex justify-between text-sm text-[hsl(var(--cocktail-text-muted))]">
                     <span>Behältergröße:</span>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleSizeEdit(level.pumpId)}
-                      className="h-6 px-2 text-[hsl(var(--cocktail-text))] hover:bg-[hsl(var(--cocktail-card-border))]"
-                    >
-                      {level.containerSize}ml
-                    </Button>
+                    <div className="ml-auto">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleSizeEdit(level.pumpId)}
+                        className="h-6 px-2 text-[hsl(var(--cocktail-text))] hover:bg-[hsl(var(--cocktail-card-border))]"
+                      >
+                        {level.containerSize}ml
+                      </Button>
+                    </div>
                   </div>
 
                   <div className="text-xs text-[hsl(var(--cocktail-text-muted))] text-center">
