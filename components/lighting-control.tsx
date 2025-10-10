@@ -4,38 +4,9 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Lightbulb, Zap, Palette, Save, RotateCcw } from "lucide-react"
+import { Lightbulb, Zap, Palette, Save, RotateCcw, Play } from "lucide-react"
 import { toast } from "@/components/ui/use-toast"
-
-interface LightingConfig {
-  cocktailPreparation: {
-    color: string
-    blinking: boolean
-  }
-  cocktailFinished: {
-    color: string
-    blinking: boolean
-  }
-  idleMode: {
-    scheme: string
-    colors: string[]
-  }
-}
-
-const defaultConfig: LightingConfig = {
-  cocktailPreparation: {
-    color: "#00ff00",
-    blinking: false,
-  },
-  cocktailFinished: {
-    color: "#0000ff",
-    blinking: true,
-  },
-  idleMode: {
-    scheme: "rainbow",
-    colors: ["#ff0000", "#00ff00", "#0000ff"],
-  },
-}
+import { type LightingConfig, defaultConfig } from "@/lib/lighting-config-types"
 
 const colorPresets = [
   { name: "Rot", value: "#ff0000" },
@@ -168,6 +139,60 @@ export default function LightingControl() {
     }
   }
 
+  const applyLighting = async (mode: "preparation" | "finished" | "idle" | "off") => {
+    try {
+      let body: any = {}
+
+      if (mode === "preparation") {
+        body = {
+          mode: "cocktailPreparation",
+          blinking: config.cocktailPreparation.blinking,
+          color: config.cocktailPreparation.color,
+          brightness: config.brightness,
+        }
+      } else if (mode === "finished") {
+        body = {
+          mode: "cocktailFinished",
+          blinking: config.cocktailFinished.blinking,
+          color: config.cocktailFinished.color,
+          brightness: config.brightness,
+        }
+      } else if (mode === "idle") {
+        if (config.idleMode.scheme === "static" && config.idleMode.colors.length > 0) {
+          body = { mode: "color", color: config.idleMode.colors[0], brightness: config.brightness }
+        } else if (config.idleMode.scheme === "off") {
+          body = { mode: "off" }
+        } else {
+          body = { mode: "idle", brightness: config.brightness }
+        }
+      } else if (mode === "off") {
+        body = { mode: "off" }
+      }
+
+      const res = await fetch("/api/lighting-control", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(body),
+      })
+
+      if (!res.ok) {
+        throw new Error(await res.text())
+      }
+
+      toast({
+        title: "Angewendet",
+        description: `${mode === "preparation" ? "Zubereitung" : mode === "finished" ? "Fertig" : mode === "idle" ? "Idle" : "Aus"} Beleuchtung wurde dauerhaft aktiviert.`,
+      })
+    } catch (error) {
+      console.error("[v0] Error applying lighting:", error)
+      toast({
+        title: "Fehler",
+        description: "Beleuchtung konnte nicht angewendet werden.",
+        variant: "destructive",
+      })
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16 bg-[hsl(var(--cocktail-bg))] min-h-[400px]">
@@ -220,6 +245,45 @@ export default function LightingControl() {
         </div>
       )}
 
+      <Card className="bg-[hsl(var(--cocktail-card-bg))] border-[hsl(var(--cocktail-card-border))]">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-[hsl(var(--cocktail-text))]">
+            <Lightbulb className="h-5 w-5 text-[hsl(var(--cocktail-primary))]" />
+            Globale Helligkeit
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <label className="text-sm font-medium text-[hsl(var(--cocktail-text))]">
+                Helligkeit: {config.brightness || 255}
+              </label>
+              <span className="text-sm text-[hsl(var(--cocktail-text-muted))]">
+                {Math.round(((config.brightness || 255) / 255) * 100)}%
+              </span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="255"
+              value={config.brightness || 255}
+              onChange={(e) => updateConfig("brightness", Number.parseInt(e.target.value))}
+              className="w-full h-2 bg-[hsl(var(--cocktail-card-border))] rounded-lg appearance-none cursor-pointer accent-[hsl(var(--cocktail-primary))]"
+            />
+            <div className="flex justify-between text-xs text-[hsl(var(--cocktail-text-muted))]">
+              <span>Aus (0)</span>
+              <span>25%</span>
+              <span>50%</span>
+              <span>75%</span>
+              <span>Max (255)</span>
+            </div>
+          </div>
+          <p className="text-sm text-[hsl(var(--cocktail-text-muted))]">
+            Die Helligkeit wird auf alle LED-Modi angewendet (Zubereitung, Fertig, Idle).
+          </p>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {/* Cocktail-Zubereitung */}
         <Card className="bg-[hsl(var(--cocktail-card-bg))] border-[hsl(var(--cocktail-card-border))]">
@@ -269,14 +333,24 @@ export default function LightingControl() {
                 {config.cocktailPreparation.blinking ? "Ein" : "Aus"}
               </Button>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => testLighting("preparation")}
-              className="w-full bg-[hsl(var(--cocktail-card-bg))] text-[hsl(var(--cocktail-text))] border-[hsl(var(--cocktail-card-border))]"
-            >
-              Test
-            </Button>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => testLighting("preparation")}
+                className="bg-[hsl(var(--cocktail-card-bg))] text-[hsl(var(--cocktail-text))] border-[hsl(var(--cocktail-card-border))]"
+              >
+                Test (5s)
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => applyLighting("preparation")}
+                className="bg-[hsl(var(--cocktail-primary))] hover:bg-[hsl(var(--cocktail-primary-hover))] text-black font-semibold"
+              >
+                <Play className="h-4 w-4 mr-1" />
+                Anwenden
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
@@ -328,14 +402,24 @@ export default function LightingControl() {
                 {config.cocktailFinished.blinking ? "Ein" : "Aus"}
               </Button>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => testLighting("finished")}
-              className="w-full bg-[hsl(var(--cocktail-card-bg))] text-[hsl(var(--cocktail-text))] border-[hsl(var(--cocktail-card-border))]"
-            >
-              Test
-            </Button>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => testLighting("finished")}
+                className="bg-[hsl(var(--cocktail-card-bg))] text-[hsl(var(--cocktail-text))] border-[hsl(var(--cocktail-card-border))]"
+              >
+                Test (5s)
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => applyLighting("finished")}
+                className="bg-[hsl(var(--cocktail-primary))] hover:bg-[hsl(var(--cocktail-primary-hover))] text-black font-semibold"
+              >
+                <Play className="h-4 w-4 mr-1" />
+                Anwenden
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
@@ -396,14 +480,24 @@ export default function LightingControl() {
                 />
               </div>
             )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => testLighting("idle")}
-              className="w-full bg-[hsl(var(--cocktail-card-bg))] text-[hsl(var(--cocktail-text))] border-[hsl(var(--cocktail-card-border))]"
-            >
-              Test
-            </Button>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => testLighting("idle")}
+                className="bg-[hsl(var(--cocktail-card-bg))] text-[hsl(var(--cocktail-text))] border-[hsl(var(--cocktail-card-border))]"
+              >
+                Test (5s)
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => applyLighting("idle")}
+                className="bg-[hsl(var(--cocktail-primary))] hover:bg-[hsl(var(--cocktail-primary-hover))] text-black font-semibold"
+              >
+                <Play className="h-4 w-4 mr-1" />
+                Anwenden
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
