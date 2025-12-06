@@ -518,11 +518,11 @@ export default function Home() {
       const scaleFactor = selectedSize / totalRecipeVolume
 
       const manualRecipeItems = cocktail.recipe
-        .filter((item) => item?.manual === true)
+        .filter((item) => item?.manual === true || item?.type === "manual")
         .map((item) => ({
           ingredientId: item.ingredientId,
           amount: Math.round(item.amount * scaleFactor),
-          instructions: undefined,
+          instructions: item.instruction || item.instructions,
         }))
 
       setManualIngredients(manualRecipeItems)
@@ -900,7 +900,7 @@ export default function Home() {
     )
 
     const manualRecipeItems = cocktail.recipe
-      .filter((item) => item?.manual === true)
+      .filter((item) => item?.manual === true || item?.type === "manual")
       .map((item) => {
         const ingredientName =
           ingredientLookup?.[item.ingredientId]?.name ?? item.ingredientId.replace(/^custom-\d+-/, "")
