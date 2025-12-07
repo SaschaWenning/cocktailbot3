@@ -954,17 +954,17 @@ export default function Home() {
                         ingredientName = item.ingredientId.replace(/^custom-\d+-/, "")
                       }
 
+                      const isManual = item.manual === true || item.type === "manual"
+
                       return (
-                        <li key={index} className={`flex items-center ${item.manual === true ? "opacity-60" : ""}`}>
+                        <li key={index} className={`flex items-center ${isManual ? "opacity-60" : ""}`}>
                           <span className="mr-2 text-[hsl(var(--cocktail-primary))]">•</span>
                           <span>
                             {Math.round(
                               item.amount * (selectedSize / (cocktail.recipe.reduce((t, it) => t + it.amount, 0) || 1)),
                             )}
                             ml {ingredientName}
-                            {item.manual === true && (
-                              <span className="text-[hsl(var(--cocktail-text-muted))] ml-2">(manuell)</span>
-                            )}
+                            {isManual && <span className="text-[hsl(var(--cocktail-text-muted))] ml-2">(manuell)</span>}
                           </span>
                         </li>
                       )
